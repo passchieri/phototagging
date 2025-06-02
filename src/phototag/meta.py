@@ -6,9 +6,10 @@ from .phototag import PhotoTag
 
 
 class Meta:
-    def __init__(self, db: Db):
+
+    def __init__(self, db: Db, phototag: PhotoTag):
         self.db = db
-        self.phototag = PhotoTag()
+        self.phototag = phototag
 
     def search(self, field: str, value: Any) -> list[MetaData]:
         """Search for data in the database."""

@@ -9,6 +9,7 @@ classifiers = [
 dependencies = [
 "requests",
 "tinydb",
+"python-dotenv"
 ] 
 description = "Igors photo tagging library" 
 dynamic = ["version"] 
