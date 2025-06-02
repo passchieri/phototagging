@@ -72,7 +72,8 @@ publish_image: docker_image
 	docker push $(REPO)/$(TAG):$(NORMALIZED_VERSION)
 
 
-install: $(INSTALL_SCRIPTS)
+install: $(WHEEL)
+	pipx install --force $(WHEEL)
 
 srcs: $(SRCS) 
 
@@ -94,5 +95,5 @@ $(VENV_SCRIPTS): $(WHEEL) $(datadir)/venv
 	source $(datadir)/venv/bin/activate && pip install --force-reinstall $<
 
 uninstall:
-	rm -Rf $(datadir)
-	rm -f $(INSTALL_SCRIPTS)
+	@echo "Uninstalling $(PACKAGE_NAME) from $(bindir)"
+	@pipx uninstall $(PACKAGE_NAME) || true
