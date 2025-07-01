@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path.home() / ".phototag.env")
 # "c9245585-facb-4737-b91f-b7a32ca098ad"
 URL = os.getenv("PHOTOTAG_URL", "https://server.phototag.ai/api/keywords")
-TOKEN = os.getenv("PHOTOTAG_TOKEN", "no token provided")
+TOKEN = os.getenv("PHOTOTAG_TOKEN", "")
 DB_FILE = os.getenv("PHOTOTAG_DB", str(Path.home() / ".phototag_db.json"))
 
 
@@ -43,9 +43,8 @@ def main():
         help="Database file name",
     )
     parser.add_argument(
-        "-i",
-        "--image",
-        action="append",
+        "image",
+        nargs="*",
         default=[],
         help="Image file names (can be used multiple times)",
     )
@@ -54,28 +53,47 @@ def main():
         "--print",
         action="append",
         default=[],
-        help="Field to print (can be used multiple times)",
+        help="Field to print (can be used multiple times). Can also be all, shutterstock, or shutter)",
     )
     args = parser.parse_args()
     try:
+        if not args.token:
+            raise ValueError(
+                "API token is required. Set it with -t or in $HOME/.phototag.env"
+            )
         db = Db(args.db)
         phototag = PhotoTag(
             url=args.url,
             token=args.token,
         )
         meta = Meta(db, phototag)
+        fields = args.print
+        if fields:
+            if "shutterstock" in fields or "shutter" in fields:
+                if len(fields) > 1:
+                    raise ValueError(
+                        "The 'shutterstock' field cannot be used with other fields."
+                    )
+                fields = ["shutter"]
+                print(
+                    "Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"
+                )
+            if "all" in fields:
+                if len(fields) > 1:
+                    raise ValueError(
+                        "The 'all' field cannot be used with other fields."
+                    )
+                fields = [
+                    "filename",
+                    "title",
+                    "pexels",
+                    "instagram",
+                    "description",
+                ]
+
         for image in args.image:
             result = meta.get_or_fetch(image)
-            if args.print:
-                fields = args.print
-                if "all" in fields:
-                    fields = [
-                        "filename",
-                        "title",
-                        "pexels",
-                        "instagram",
-                        "description",
-                    ]
+            if fields and "shutter" not in fields:
                 for field in fields:
                     attr = getattr(result, field, None)
                     if attr is None:
@@ -84,6 +102,9 @@ def main():
                         print(attr())
                     else:
                         print(attr)
+                print("------------------------")
+            elif fields and "shutter" in fields:
+                print(f'{result.filename},{result.title},"{result.pexels()}",,,no,')
             else:
                 data = result.to_dict()
                 data.update(
