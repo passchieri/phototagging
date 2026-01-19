@@ -60,7 +60,8 @@ def _create_parser():
         "--print",
         action="append",
         default=[],
-        help="Field to print (can be used multiple times). Can also be all, shutterstock, or shutter)",
+        help="Field to print (can be used multiple times). "
+        "Can also be all, shutterstock, shutter, pexels, or instagram.",
     )
     return parser
 
