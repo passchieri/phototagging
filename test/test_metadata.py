@@ -108,4 +108,11 @@ def test_metadata():
     assert "waterway, " in metadata.pexels()
     assert "#clouds" in metadata.instagram()
     assert "#shippingindustry" in metadata.instagram()
-    assert metadata.to_dict() == data, "to_dict should return the original data"
+    result = metadata.to_dict()
+    expected = {**data, "keywords": result["keywords"]}
+    assert (
+        result == expected
+    ), "to_dict should return the original data (keywords may differ in type)"
+    assert set(result["keywords"]) == set(
+        data["keywords"]
+    ), "to_dict keywords should match original set of keywords"

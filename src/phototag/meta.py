@@ -17,13 +17,22 @@ class Meta:
             data = c.search(field, value)
         return [MetaData(**item) for item in data]
 
-    def get_or_fetch(self, filename: str) -> Optional[MetaData]:
-        """Get metadata for a file, or fetch it if not found."""
+    def get_or_fetch(
+        self, filename: str, default_tags: Optional[list] = None
+    ) -> Optional[MetaData]:
+        """Get metadata for a file, or fetch it if not found. Make sure all tags from default_tags are included."""
 
         metadata = self.get_by_filename(filename)
-        if metadata:
-            return metadata
-        return self.fetch_for_file(filename)
+        if not metadata:
+            metadata = self.fetch_for_file(filename)
+
+        if not metadata:
+            raise ValueError(f"Could not fetch metadata for file '{filename}'.")
+        if not metadata.keywords:
+            metadata.keywords = []
+        if default_tags:
+            self.update_keywords(metadata, default_tags)
+        return metadata
 
     def get_by_id(self, id: str) -> Optional[MetaData]:
         """Get a single record from the database."""
@@ -54,6 +63,13 @@ class Meta:
             )
         data = self.phototag.fetch_for_file(filename)
         metadata = MetaData(**data)
+        return self.update_db(metadata)
+
+    def update_keywords(self, metadata: MetaData, new_keywords: set[str]) -> MetaData:
+        metadata.append_keywords(new_keywords)
+        return self.update_db(metadata)
+
+    def update_db(self, metadata):
         with self.db:
             self.db.update_or_insert(metadata.to_dict())
         return metadata

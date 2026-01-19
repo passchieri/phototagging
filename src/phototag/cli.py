@@ -16,7 +16,7 @@ TOKEN = os.getenv("PHOTOTAG_TOKEN", "")
 DB_FILE = os.getenv("PHOTOTAG_DB", str(Path.home() / ".phototag_db.json"))
 
 
-def main():
+def _create_parser():
     parser = argparse.ArgumentParser(
         description="PhotoTagging CLI. Fetch metadata for images using PhotoTag API. The results are stored"
         " in a local database, and reused. Defaults for URL, token and database file can be set in environment variables"
@@ -31,11 +31,18 @@ def main():
         help="API URL",
     )
     parser.add_argument(
-        "-t",
         "--token",
         default=TOKEN,
         help="API token",
     )
+    parser.add_argument(
+        "-t",
+        "--tags",
+        type=lambda s: [tag.strip() for tag in s.split(",")],
+        default=[],
+        help="tags to be added to each image (comma-separated)",
+    )
+
     parser.add_argument(
         "-d",
         "--db",
@@ -55,11 +62,69 @@ def main():
         default=[],
         help="Field to print (can be used multiple times). Can also be all, shutterstock, or shutter)",
     )
+    return parser
+
+
+def _process_fields(fields):
+    if not fields:
+        return fields
+
+    if "shutterstock" in fields or "shutter" in fields:
+        if len(fields) > 1:
+            raise ValueError(
+                "The 'shutterstock' field cannot be used with other fields."
+            )
+        print(
+            "Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"
+        )
+        return ["shutter"]
+
+    if "all" in fields:
+        if len(fields) > 1:
+            raise ValueError("The 'all' field cannot be used with other fields.")
+        return [
+            "filename",
+            "title",
+            "pexels",
+            "instagram",
+            "description",
+        ]
+
+    return fields
+
+
+def _print_result(result, fields):
+    if fields and "shutter" not in fields:
+        for field in fields:
+            attr = getattr(result, field, None)
+            if attr is None:
+                print(f"No such field: {field}")
+            elif callable(attr):
+                print(attr())
+            else:
+                print(attr)
+        print("------------------------")
+    elif fields and "shutter" in fields:
+        print(f'{result.filename},{result.title},"{result.pexels()}",,,no,')
+    else:
+        data = result.to_dict()
+        data.update({"pexels": result.pexels(), "instagram": result.instagram()})
+        print(
+            json.dumps(
+                data,
+                indent=4,
+            )
+        )
+
+
+def main():
+    parser = _create_parser()
     args = parser.parse_args()
+    default_tags = args.tags if args.tags else None
     try:
         if not args.token:
             raise ValueError(
-                "API token is required. Set it with -t or in $HOME/.phototag.env"
+                "API token is required. Set it with --token or in $HOME/.phototag.env"
             )
         db = Db(args.db)
         phototag = PhotoTag(
@@ -67,55 +132,11 @@ def main():
             token=args.token,
         )
         meta = Meta(db, phototag)
-        fields = args.print
-        if fields:
-            if "shutterstock" in fields or "shutter" in fields:
-                if len(fields) > 1:
-                    raise ValueError(
-                        "The 'shutterstock' field cannot be used with other fields."
-                    )
-                fields = ["shutter"]
-                print(
-                    "Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"
-                )
-            if "all" in fields:
-                if len(fields) > 1:
-                    raise ValueError(
-                        "The 'all' field cannot be used with other fields."
-                    )
-                fields = [
-                    "filename",
-                    "title",
-                    "pexels",
-                    "instagram",
-                    "description",
-                ]
+        fields = _process_fields(args.print)
 
         for image in args.image:
-            result = meta.get_or_fetch(image)
-            if fields and "shutter" not in fields:
-                for field in fields:
-                    attr = getattr(result, field, None)
-                    if attr is None:
-                        print(f"No such field: {field}")
-                    elif callable(attr):
-                        print(attr())
-                    else:
-                        print(attr)
-                print("------------------------")
-            elif fields and "shutter" in fields:
-                print(f'{result.filename},{result.title},"{result.pexels()}",,,no,')
-            else:
-                data = result.to_dict()
-                data.update(
-                    {"pexels": result.pexels(), "instagram": result.instagram()}
-                )
-                print(
-                    json.dumps(
-                        data,
-                        indent=4,
-                    )
-                )
+            result = meta.get_or_fetch(image, default_tags=default_tags)
+            _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")
         return 1
