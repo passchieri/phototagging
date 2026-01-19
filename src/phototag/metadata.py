@@ -4,6 +4,8 @@ from typing import Optional
 
 @dataclass
 class MetaData:
+    """Class representing metadata for a photo."""
+
     id: str
     filename: str
     keywords: list[str] = field(default_factory=list)

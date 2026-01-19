@@ -4,6 +4,10 @@ from tinydb import Query, TinyDB
 
 
 class Db:
+    """
+    A simple database wrapper around TinyDB for storing photo metadata.
+    """
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self._db = None
@@ -21,7 +25,7 @@ class Db:
 
     def close(self):
         """Close the database connection."""
-        if self._db:
+        if self._db is not None:
             self._db.close()
             self._db = None
 
@@ -65,12 +69,12 @@ class Db:
         return self._db.search(Query()[field] == value)
 
     def get_by_id(self, id: str):
-        """Get a single record from the database."""
+        """Get a single record from the database by id."""
         results = self.search("id", id)
         return results[0] if results else None
 
     def get_by_filename(self, filename: str):
-        """Get a single record from the database."""
+        """Get a single record from the database by filename."""
         path = Path(filename)
         results = self.search("id", path.name)
         return results[0] if results else None

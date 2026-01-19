@@ -116,3 +116,21 @@ def test_metadata():
     assert set(result["keywords"]) == set(
         data["keywords"]
     ), "to_dict keywords should match original set of keywords"
+
+
+def test_append_keywords():
+    """Test the append_keywords method of MetaData."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=["sunset", "beach"],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.append_keywords(["ocean", "sunset", "vacation"])
+    assert set(metadata.keywords) == {
+        "sunset",
+        "beach",
+        "ocean",
+        "vacation",
+    }, "append_keywords should add new keywords and avoid duplicates"

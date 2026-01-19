@@ -74,6 +74,29 @@ linting = [
   "types-requests",
 ]
 
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report=term-missing"
+testpaths = ["test"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = [
+"*/__init__.py",
+"*/main.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ :",
+]
+show_missing = true
+fail_under = 0
+
 [tool.flake8]
 max-line-length = 120
 

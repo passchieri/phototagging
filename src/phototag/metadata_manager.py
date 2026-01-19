@@ -5,7 +5,10 @@ from .db import Db
 from .phototag import PhotoTag
 
 
-class Meta:
+class MetadataManager:
+    """
+    Class to manage photo metadata using a database and PhotoTag API.
+    """
 
     def __init__(self, db: Db, phototag: PhotoTag):
         self.db = db
@@ -20,7 +23,8 @@ class Meta:
     def get_or_fetch(
         self, filename: str, default_tags: Optional[list] = None
     ) -> Optional[MetaData]:
-        """Get metadata for a file, or fetch it if not found. Make sure all tags from default_tags are included."""
+        """Get metadata for a file, or fetch it if not found.
+        Makes sure all tags from default_tags are included."""
 
         metadata = self.get_by_filename(filename)
         if not metadata:
@@ -31,7 +35,7 @@ class Meta:
         if not metadata.keywords:
             metadata.keywords = []
         if default_tags:
-            self.update_keywords(metadata, default_tags)
+            self.ensure_keywords(metadata, default_tags)
         return metadata
 
     def get_by_id(self, id: str) -> Optional[MetaData]:
@@ -62,14 +66,20 @@ class Meta:
                 f"Metadata for file '{filename}' already exists in the database."
             )
         data = self.phototag.fetch_for_file(filename)
+        if not data:
+            return None
         metadata = MetaData(**data)
         return self.update_db(metadata)
 
-    def update_keywords(self, metadata: MetaData, new_keywords: list[str]) -> MetaData:
-        metadata.append_keywords(new_keywords)
+    def ensure_keywords(
+        self, metadata: MetaData, required_keywords: list[str]
+    ) -> MetaData:
+        """Ensure all keywords are present in metadata."""
+        metadata.append_keywords(required_keywords)
         return self.update_db(metadata)
 
     def update_db(self, metadata):
+        """Update or insert metadata into the database."""
         with self.db:
             self.db.update_or_insert(metadata.to_dict())
         return metadata

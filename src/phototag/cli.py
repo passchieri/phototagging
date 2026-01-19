@@ -1,6 +1,6 @@
 import argparse
 from .db import Db
-from .meta import Meta
+from .metadata_manager import MetadataManager
 from .phototag import PhotoTag
 import json
 
@@ -16,6 +16,9 @@ DB_FILE = os.getenv("PHOTOTAG_DB", str(Path.home() / ".phototag_db.json"))
 
 
 def _create_parser():
+    """
+    Create the argument parser for the CLI.
+    """
     parser = argparse.ArgumentParser(
         description="PhotoTagging CLI. Fetch metadata for images using PhotoTag API. The results are stored"
         " in a local database, and reused. Defaults for URL, token and database file can be set in environment "
@@ -66,6 +69,7 @@ def _create_parser():
 
 
 def _process_fields(fields):
+    """Process the fields argument and handle special cases."""
     if not fields:
         return fields
 
@@ -131,7 +135,7 @@ def main():
             url=args.url,
             token=args.token,
         )
-        meta = Meta(db, phototag)
+        meta = MetadataManager(db, phototag)
         fields = _process_fields(args.print)
 
         for image in args.image:
@@ -144,4 +148,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main()  # pragma: no cover
