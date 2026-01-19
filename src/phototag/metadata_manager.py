@@ -59,7 +59,7 @@ class MetadataManager:
             return MetaData(**data)
         return None
 
-    def fetch_for_file(self, filename: str, force=False) -> MetaData:
+    def fetch_for_file(self, filename: str, force=False) -> Optional[MetaData]:
         """Fetch metadata for a file using PhotoTag."""
         if not force and self.get_by_filename(filename):
             raise ValueError(
