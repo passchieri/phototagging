@@ -65,7 +65,7 @@ class Meta:
         metadata = MetaData(**data)
         return self.update_db(metadata)
 
-    def update_keywords(self, metadata: MetaData, new_keywords: set[str]) -> MetaData:
+    def update_keywords(self, metadata: MetaData, new_keywords: list[str]) -> MetaData:
         metadata.append_keywords(new_keywords)
         return self.update_db(metadata)
 

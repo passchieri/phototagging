@@ -6,7 +6,7 @@ from typing import Optional
 class MetaData:
     id: str
     filename: str
-    keywords: set[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
     title: Optional[str] = None
     description: Optional[str] = None
 

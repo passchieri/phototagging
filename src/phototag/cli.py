@@ -19,9 +19,9 @@ DB_FILE = os.getenv("PHOTOTAG_DB", str(Path.home() / ".phototag_db.json"))
 def _create_parser():
     parser = argparse.ArgumentParser(
         description="PhotoTagging CLI. Fetch metadata for images using PhotoTag API. The results are stored"
-        " in a local database, and reused. Defaults for URL, token and database file can be set in environment variables"
-        "or in  ~/.phototag.env file, prepending the parameter with PHOTOTAG_, e.g. PHOTOTAG_URL.",
-        epilog="Example: phototag -i image1.jpg -i image2.jpg -p title -p description",
+        " in a local database, and reused. Defaults for URL, token and database file can be set in environment "
+        "variables or in  ~/.phototag.env file, prepending the parameter with PHOTOTAG_, e.g. PHOTOTAG_URL.",
+        epilog="Example: phototag -t aap,noot -p title -p description image1.jpg image2.jpg",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
