@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 # Load .phototag.env from home directory
 load_dotenv(dotenv_path=Path.home() / ".phototag.env")
-# "c9245585-facb-4737-b91f-b7a32ca098ad"
 URL = os.getenv("PHOTOTAG_URL", "https://server.phototag.ai/api/keywords")
 TOKEN = os.getenv("PHOTOTAG_TOKEN", "")
 DB_FILE = os.getenv("PHOTOTAG_DB", str(Path.home() / ".phototag_db.json"))
