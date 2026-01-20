@@ -46,6 +46,14 @@ def _create_parser():
     )
 
     parser.add_argument(
+        "-r",
+        "--remove-tags",
+        type=lambda s: [tag.strip() for tag in s.split(",")],
+        default=[],
+        help="tags to be removed from each image (comma-separated)",
+    )
+
+    parser.add_argument(
         "-d",
         "--db",
         default=DB_FILE,
@@ -125,6 +133,7 @@ def main():
     parser = _create_parser()
     args = parser.parse_args()
     default_tags = args.tags if args.tags else None
+    removed_tags = args.remove_tags if args.remove_tags else None
     try:
         if not args.token:
             raise ValueError(
@@ -139,7 +148,9 @@ def main():
         fields = _process_fields(args.print)
 
         for image in args.image:
-            result = meta.get_or_fetch(image, default_tags=default_tags)
+            result = meta.get_or_fetch(
+                image, default_tags=default_tags, removed_tags=removed_tags
+            )
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

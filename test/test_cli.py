@@ -35,7 +35,39 @@ class TestCreateParser:
         args = parser.parse_args(["-t", "tag1, tag2 , tag3", "image.jpg"])
         assert args.tags == ["tag1", "tag2", "tag3"]
 
-    def test_parser_with_print_field(self):
+    def test_parser_with_remove_tags(self):
+        """Test parser with remove-tags argument."""
+        parser = _create_parser()
+        args = parser.parse_args(["-r", "tag1,tag2,tag3", "image.jpg"])
+        assert args.remove_tags == ["tag1", "tag2", "tag3"]
+
+    def test_parser_with_remove_tags_long_form(self):
+        """Test parser with --remove-tags long form argument."""
+        parser = _create_parser()
+        args = parser.parse_args(["--remove-tags", "tag1,tag2,tag3", "image.jpg"])
+        assert args.remove_tags == ["tag1", "tag2", "tag3"]
+
+    def test_parser_with_remove_tags_whitespace(self):
+        """Test parser with remove-tags containing whitespace."""
+        parser = _create_parser()
+        args = parser.parse_args(["-r", "tag1, tag2 , tag3", "image.jpg"])
+        assert args.remove_tags == ["tag1", "tag2", "tag3"]
+
+    def test_parser_with_tags_and_remove_tags(self):
+        """Test parser with both tags and remove-tags arguments."""
+        parser = _create_parser()
+        args = parser.parse_args(
+            ["-t", "add1,add2", "-r", "remove1,remove2", "image.jpg"]
+        )
+        assert args.tags == ["add1", "add2"]
+        assert args.remove_tags == ["remove1", "remove2"]
+
+    def test_parser_remove_tags_default_empty(self):
+        """Test parser default remove-tags is empty list."""
+        parser = _create_parser()
+        args = parser.parse_args(["image.jpg"])
+        assert args.remove_tags == []
+
         """Test parser with print field argument."""
         parser = _create_parser()
         args = parser.parse_args(["-p", "title", "-p", "description", "image.jpg"])
@@ -221,6 +253,7 @@ class TestMain:
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = []
+            mock_args.remove_tags = []
             mock_args.image = ["image1.jpg", "image2.jpg"]
             mock_args.print = []
 
@@ -239,6 +272,75 @@ class TestMain:
                 result = main()
             assert result == 0
             assert mock_meta_instance.get_or_fetch.call_count == 2
+
+    @patch("phototag.cli.Db")
+    @patch("phototag.cli.PhotoTag")
+    @patch("phototag.cli.MetadataManager")
+    def test_main_with_remove_tags(self, mock_meta, mock_phototag, mock_db):
+        """Test main function with remove-tags argument."""
+        with patch("phototag.cli._create_parser") as mock_parser:
+            mock_args = Mock()
+            mock_args.token = "valid_token"
+            mock_args.url = "https://api.test.com"
+            mock_args.db = "/path/to/db.json"
+            mock_args.tags = []
+            mock_args.remove_tags = ["tag1", "tag2"]
+            mock_args.image = ["image1.jpg"]
+            mock_args.print = []
+
+            # Setup the Meta mock
+            mock_meta_instance = Mock()
+            mock_result = Mock()
+            mock_result.to_dict.return_value = {}
+            mock_result.pexels.return_value = ""
+            mock_result.instagram.return_value = ""
+            mock_meta_instance.get_or_fetch.return_value = mock_result
+            mock_meta.return_value = mock_meta_instance
+
+            mock_parser.return_value.parse_args.return_value = mock_args
+
+            with patch("phototag.cli._print_result"):
+                result = main()
+            assert result == 0
+            # Verify get_or_fetch was called with remove_tags
+            mock_meta_instance.get_or_fetch.assert_called_once()
+            call_kwargs = mock_meta_instance.get_or_fetch.call_args[1]
+            assert call_kwargs["removed_tags"] == ["tag1", "tag2"]
+
+    @patch("phototag.cli.Db")
+    @patch("phototag.cli.PhotoTag")
+    @patch("phototag.cli.MetadataManager")
+    def test_main_with_tags_and_remove_tags(self, mock_meta, mock_phototag, mock_db):
+        """Test main function with both tags and remove-tags arguments."""
+        with patch("phototag.cli._create_parser") as mock_parser:
+            mock_args = Mock()
+            mock_args.token = "valid_token"
+            mock_args.url = "https://api.test.com"
+            mock_args.db = "/path/to/db.json"
+            mock_args.tags = ["add1", "add2"]
+            mock_args.remove_tags = ["remove1", "remove2"]
+            mock_args.image = ["image.jpg"]
+            mock_args.print = []
+
+            # Setup the Meta mock
+            mock_meta_instance = Mock()
+            mock_result = Mock()
+            mock_result.to_dict.return_value = {}
+            mock_result.pexels.return_value = ""
+            mock_result.instagram.return_value = ""
+            mock_meta_instance.get_or_fetch.return_value = mock_result
+            mock_meta.return_value = mock_meta_instance
+
+            mock_parser.return_value.parse_args.return_value = mock_args
+
+            with patch("phototag.cli._print_result"):
+                result = main()
+            assert result == 0
+            # Verify get_or_fetch was called with both default_tags and removed_tags
+            mock_meta_instance.get_or_fetch.assert_called_once()
+            call_kwargs = mock_meta_instance.get_or_fetch.call_args[1]
+            assert call_kwargs["default_tags"] == ["add1", "add2"]
+            assert call_kwargs["removed_tags"] == ["remove1", "remove2"]
 
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")

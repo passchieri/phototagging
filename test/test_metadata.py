@@ -134,3 +134,79 @@ def test_append_keywords():
         "ocean",
         "vacation",
     }, "append_keywords should add new keywords and avoid duplicates"
+
+
+def test_remove_keywords():
+    """Test the remove_keywords method of MetaData."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=["sunset", "beach", "ocean", "vacation", "travel"],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.remove_keywords(["sunset", "vacation"])
+    assert set(metadata.keywords) == {
+        "beach",
+        "ocean",
+        "travel",
+    }, "remove_keywords should remove specified keywords"
+
+
+def test_remove_keywords_partial_match():
+    """Test remove_keywords with some keywords not in the list."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=["sunset", "beach", "ocean"],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.remove_keywords(["sunset", "mountain", "vacation"])
+    assert set(metadata.keywords) == {
+        "beach",
+        "ocean",
+    }, "remove_keywords should only remove keywords that exist"
+
+
+def test_remove_all_keywords():
+    """Test remove_keywords when removing all keywords."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=["sunset", "beach"],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.remove_keywords(["sunset", "beach"])
+    assert metadata.keywords == [], "remove_keywords should allow removing all keywords"
+
+
+def test_remove_keywords_empty_list():
+    """Test remove_keywords with an empty list of keywords to remove."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=["sunset", "beach", "ocean"],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.remove_keywords([])
+    assert set(metadata.keywords) == {
+        "sunset",
+        "beach",
+        "ocean",
+    }, "remove_keywords with empty list should not modify keywords"
+
+
+def test_remove_keywords_from_empty():
+    """Test remove_keywords from an empty keywords list."""
+    metadata = MetaData(
+        id="test.jpg",
+        filename="test.jpg",
+        keywords=[],
+        title="Sunset at the Beach",
+        description="A beautiful sunset at the beach.",
+    )
+    metadata.remove_keywords(["sunset", "beach"])
+    assert metadata.keywords == [], "remove_keywords on empty list should remain empty"

@@ -18,6 +18,10 @@ class MetaData:
             if keyword not in self.keywords:
                 self.keywords.append(keyword)
 
+    def remove_keywords(self, keywords_to_remove: list[str]):
+        """Remove specified keywords from the existing set of keywords."""
+        self.keywords = [kw for kw in self.keywords if kw not in keywords_to_remove]
+
     def pexels(self) -> str:
         """Return keywords formatted for Pexels."""
         return ", ".join(sorted(set(self.keywords)))

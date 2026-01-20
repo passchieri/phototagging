@@ -231,6 +231,88 @@ class TestMetaEnsureKeywords:
             mock_db.update_or_insert.assert_called_once()
 
 
+class TestMetaRemoveKeywords:
+    """Test the remove_keywords method."""
+
+    def test_remove_keywords_removes_specified_keywords(
+        self, meta, mock_db, sample_metadata
+    ):
+        """Test remove_keywords removes specified keywords."""
+        metadata = MetaData(**sample_metadata)
+        original_count = len(metadata.keywords)
+
+        result = meta.remove_keywords(metadata, ["test"])
+        assert "test" not in result.keywords
+        assert len(result.keywords) < original_count
+
+    def test_remove_keywords_keeps_other_keywords(self, meta, mock_db, sample_metadata):
+        """Test remove_keywords keeps keywords not in removal list."""
+        metadata = MetaData(**sample_metadata)
+
+        result = meta.remove_keywords(metadata, ["test"])
+        assert "image" in result.keywords
+
+    def test_remove_keywords_removes_multiple(self, meta, mock_db):
+        """Test remove_keywords removes multiple keywords at once."""
+        metadata = MetaData(
+            id="test.jpg",
+            filename="test.jpg",
+            keywords=["sunset", "beach", "ocean", "vacation"],
+            title="Test",
+            description="Test",
+        )
+
+        result = meta.remove_keywords(metadata, ["sunset", "vacation"])
+        assert set(result.keywords) == {"beach", "ocean"}
+
+    def test_remove_keywords_updates_db(self, meta, mock_db, sample_metadata):
+        """Test remove_keywords updates database."""
+        metadata = MetaData(**sample_metadata)
+
+        result = meta.remove_keywords(metadata, ["test"])
+        mock_db.update_or_insert.assert_called_once()
+
+    def test_remove_keywords_returns_metadata(self, meta, mock_db, sample_metadata):
+        """Test remove_keywords returns the metadata object."""
+        metadata = MetaData(**sample_metadata)
+
+        result = meta.remove_keywords(metadata, ["test"])
+        assert result == metadata
+
+    def test_remove_keywords_with_nonexistent_keyword(
+        self, meta, mock_db, sample_metadata
+    ):
+        """Test remove_keywords handles non-existent keywords gracefully."""
+        metadata = MetaData(**sample_metadata)
+        original_keywords = metadata.keywords.copy()
+
+        result = meta.remove_keywords(metadata, ["nonexistent"])
+        assert set(result.keywords) == set(original_keywords)
+
+    def test_remove_keywords_with_empty_removal_list(
+        self, meta, mock_db, sample_metadata
+    ):
+        """Test remove_keywords with empty removal list."""
+        metadata = MetaData(**sample_metadata)
+        original_keywords = metadata.keywords.copy()
+
+        result = meta.remove_keywords(metadata, [])
+        assert set(result.keywords) == set(original_keywords)
+
+    def test_remove_keywords_removes_all_keywords(self, meta, mock_db):
+        """Test remove_keywords can remove all keywords."""
+        metadata = MetaData(
+            id="test.jpg",
+            filename="test.jpg",
+            keywords=["tag1", "tag2"],
+            title="Test",
+            description="Test",
+        )
+
+        result = meta.remove_keywords(metadata, ["tag1", "tag2"])
+        assert result.keywords == []
+
+
 class TestMetaUpdateDb:
     """Test the update_db method."""
 
