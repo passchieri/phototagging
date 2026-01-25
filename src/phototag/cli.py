@@ -83,7 +83,7 @@ def _create_parser():
     return parser
 
 
-def _process_fields(fields: Optional[list[str]]) -> list[str]:
+def _process_fields(fields: Optional[list[str]]) -> Optional[list[str]]:
     """Process the fields argument and handle special cases."""
     if not fields:
         return fields
@@ -112,7 +112,7 @@ def _process_fields(fields: Optional[list[str]]) -> list[str]:
     return fields
 
 
-def _print_result(result, fields:list[str]):
+def _print_result(result, fields: list[str]):
     if fields and "shutter" not in fields:
         for field in fields:
             attr = getattr(result, field, None)
@@ -159,7 +159,7 @@ def main():
             for record in records:
                 _print_result(record, fields)
             return 0
-        
+
         for image in args.image:
             result = meta.get_or_fetch(
                 image, default_tags=default_tags, removed_tags=removed_tags

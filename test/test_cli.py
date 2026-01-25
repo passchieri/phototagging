@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch, MagicMock
 from phototag.cli import _create_parser, _process_fields, _print_result, main
 from phototag.metadata import MetaData
 
@@ -146,7 +146,7 @@ class TestPrintResult:
 
     def test_print_result_no_fields(self, capsys):
         """Test printing result with no fields specified."""
-        result = Mock()
+        result = MagicMock()
         result.to_dict.return_value = {"id": "test.jpg", "title": "Test"}
         result.pexels.return_value = "pexels_data"
         result.instagram.return_value = "instagram_data"
@@ -158,7 +158,7 @@ class TestPrintResult:
 
     def test_print_result_with_fields(self, capsys):
         """Test printing result with specific fields."""
-        result = Mock()
+        result = MagicMock()
         result.filename = "test.jpg"
         result.title = "Test Title"
         result.description = None
@@ -170,7 +170,7 @@ class TestPrintResult:
 
     def test_print_result_invalid_field(self, capsys):
         """Test printing result with invalid field."""
-        result = Mock()
+        result = MagicMock()
         result.invalid_field = None
         result.to_dict.return_value = {}
 
@@ -180,8 +180,8 @@ class TestPrintResult:
 
     def test_print_result_callable_field(self, capsys):
         """Test printing result with callable field."""
-        result = Mock()
-        result.pexels = Mock(return_value="pexels_keywords")
+        result = MagicMock()
+        result.pexels = MagicMock(return_value="pexels_keywords")
 
         _print_result(result, ["pexels"])
         captured = capsys.readouterr()
@@ -189,7 +189,7 @@ class TestPrintResult:
 
     def test_print_result_shutter_format(self, capsys):
         """Test printing result in shutter format."""
-        result = Mock()
+        result = MagicMock()
         result.filename = "test.jpg"
         result.title = "Test Title"
         result.pexels.return_value = "keywords"
@@ -202,12 +202,15 @@ class TestPrintResult:
 
     def test_print_result_with_all_fields(self, capsys):
         """Test printing result with all fields."""
-        result = MetaData(id="test.jpg", filename="test.jpg",
-                          title = "Test Title",
-                          description = "Test Description",
-                          keywords=["apple","banana"])
+        result = MetaData(
+            id="test.jpg",
+            filename="test.jpg",
+            title="Test Title",
+            description="Test Description",
+            keywords=["apple", "banana"],
+        )
 
-        fields=_process_fields(["all"])
+        fields = _process_fields(["all"])
         _print_result(result, fields)
         captured = capsys.readouterr()
         assert "test.jpg" in captured.out
@@ -226,7 +229,7 @@ class TestMain:
     def test_main_no_token(self, mock_meta, mock_phototag, mock_db, capsys):
         """Test main function with no token."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = ""
             mock_args.image = []
             mock_args.tags = []
@@ -243,7 +246,7 @@ class TestMain:
     def test_main_with_valid_args(self, mock_meta, mock_phototag, mock_db):
         """Test main function with valid arguments."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
@@ -265,7 +268,7 @@ class TestMain:
     def test_main_with_images(self, mock_meta, mock_phototag, mock_db):
         """Test main function processing images."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
@@ -273,11 +276,11 @@ class TestMain:
             mock_args.remove_tags = []
             mock_args.image = ["image1.jpg", "image2.jpg"]
             mock_args.print = []
-            mock_args.all=False
+            mock_args.all = False
 
             # Setup the Meta mock
-            mock_meta_instance = Mock()
-            mock_result = Mock()
+            mock_meta_instance = MagicMock()
+            mock_result = MagicMock()
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
@@ -297,7 +300,7 @@ class TestMain:
     def test_main_with_remove_tags(self, mock_meta, mock_phototag, mock_db):
         """Test main function with remove-tags argument."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
@@ -305,11 +308,11 @@ class TestMain:
             mock_args.remove_tags = ["tag1", "tag2"]
             mock_args.image = ["image1.jpg"]
             mock_args.print = []
-            mock_args.all=False
+            mock_args.all = False
 
             # Setup the Meta mock
-            mock_meta_instance = Mock()
-            mock_result = Mock()
+            mock_meta_instance = MagicMock()
+            mock_result = MagicMock()
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
@@ -332,7 +335,7 @@ class TestMain:
     def test_main_with_tags_and_remove_tags(self, mock_meta, mock_phototag, mock_db):
         """Test main function with both tags and remove-tags arguments."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
@@ -340,12 +343,11 @@ class TestMain:
             mock_args.remove_tags = ["remove1", "remove2"]
             mock_args.image = ["image.jpg"]
             mock_args.print = []
-            mock_args.all=False
-
+            mock_args.all = False
 
             # Setup the Meta mock
-            mock_meta_instance = Mock()
-            mock_result = Mock()
+            mock_meta_instance = MagicMock()
+            mock_result = MagicMock()
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
@@ -369,7 +371,7 @@ class TestMain:
     def test_main_exception_handling(self, mock_meta, mock_phototag, mock_db, capsys):
         """Test main function exception handling."""
         with patch("phototag.cli._create_parser") as mock_parser:
-            mock_args = Mock()
+            mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"

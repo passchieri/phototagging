@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 from phototag.metadata_manager import MetadataManager
 from phototag.metadata import MetaData
 
@@ -8,15 +8,15 @@ from phototag.metadata import MetaData
 def mock_db():
     """Create a mock database with context manager support."""
     db = MagicMock()
-    db.__enter__ = Mock(return_value=db)
-    db.__exit__ = Mock(return_value=None)
+    db.__enter__ = MagicMock(return_value=db)
+    db.__exit__ = MagicMock(return_value=None)
     return db
 
 
 @pytest.fixture
 def mock_phototag():
     """Create a mock PhotoTag API."""
-    return Mock()
+    return MagicMock()
 
 
 @pytest.fixture
@@ -229,10 +229,10 @@ class TestMetaEnsureKeywords:
     def test_ensure_keywords_appends_to_existing(self, meta, mock_db, sample_metadata):
         """Test ensure_keywords appends new keywords to existing ones."""
         metadata = MetaData(**sample_metadata)
-        original_keywords = metadata.keywords.copy()
+        metadata.keywords.copy()
 
         with patch.object(metadata, "append_keywords") as mock_append:
-            result = meta.ensure_keywords(metadata, ["new_keyword"])
+            meta.ensure_keywords(metadata, ["new_keyword"])
             mock_append.assert_called_once_with(["new_keyword"])
 
     def test_ensure_keywords_updates_db(self, meta, mock_db, sample_metadata):
@@ -240,7 +240,7 @@ class TestMetaEnsureKeywords:
         metadata = MetaData(**sample_metadata)
 
         with patch.object(metadata, "append_keywords"):
-            result = meta.ensure_keywords(metadata, ["new_keyword"])
+            meta.ensure_keywords(metadata, ["new_keyword"])
             mock_db.update_or_insert.assert_called_once()
 
 
@@ -282,7 +282,7 @@ class TestMetaRemoveKeywords:
         """Test remove_keywords updates database."""
         metadata = MetaData(**sample_metadata)
 
-        result = meta.remove_keywords(metadata, ["test"])
+        meta.remove_keywords(metadata, ["test"])
         mock_db.update_or_insert.assert_called_once()
 
     def test_remove_keywords_returns_metadata(self, meta, mock_db, sample_metadata):

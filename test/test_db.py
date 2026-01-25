@@ -1,8 +1,5 @@
-import time
-
 import pytest
 from phototag.db import Db
-import os
 
 
 def test_get_by_filename(tmp_path):

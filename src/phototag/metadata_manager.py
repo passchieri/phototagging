@@ -14,13 +14,12 @@ class MetadataManager:
         self.db = db
         self.phototag = phototag
 
-
     def all(self) -> list[MetaData]:
         """Get all records from the database."""
         with self.db as c:
             data = c.all()
         return [MetaData(**item) for item in data]
-    
+
     def search(self, field: str, value: Any) -> list[MetaData]:
         """Search for data in the database."""
         with self.db as c:
@@ -103,5 +102,3 @@ class MetadataManager:
         with self.db:
             self.db.update_or_insert(metadata.to_dict())
         return metadata
-    
-
