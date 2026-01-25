@@ -126,6 +126,19 @@ class TestMetaGetOrFetch:
         result = meta.get_or_fetch("test_image.jpg")
         assert result.keywords == []
 
+    def test_get_or_fetch_with_removed_tags(
+        self, meta, mock_db, mock_phototag, sample_metadata
+    ):
+        """Test get_or_fetch removes specified tags."""
+        metadata = sample_metadata.copy()
+        metadata["keywords"] = ["test", "image", "remove_me"]
+        mock_db.get_by_filename.return_value = metadata
+
+        result = meta.get_or_fetch("test_image.jpg", removed_tags=["remove_me"])
+        assert "remove_me" not in result.keywords
+        assert "test" in result.keywords
+        assert "image" in result.keywords
+
 
 class TestMetaGetById:
     """Test the get_by_id method."""

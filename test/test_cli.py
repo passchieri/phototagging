@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from phototag.cli import _create_parser, _process_fields, _print_result, main
+from phototag.metadata import MetaData
 
 
 class TestCreateParser:
@@ -199,6 +200,22 @@ class TestPrintResult:
         assert "Test Title" in captured.out
         assert '"keywords"' in captured.out
 
+    def test_print_result_with_all_fields(self, capsys):
+        """Test printing result with all fields."""
+        result = MetaData(id="test.jpg", filename="test.jpg",
+                          title = "Test Title",
+                          description = "Test Description",
+                          keywords=["apple","banana"])
+
+        fields=_process_fields(["all"])
+        _print_result(result, fields)
+        captured = capsys.readouterr()
+        assert "test.jpg" in captured.out
+        assert "Test Title" in captured.out
+        assert "Test Description" in captured.out
+        assert "apple" in captured.out
+        assert "banana" in captured.out
+
 
 class TestMain:
     """Test the main function."""
@@ -256,6 +273,7 @@ class TestMain:
             mock_args.remove_tags = []
             mock_args.image = ["image1.jpg", "image2.jpg"]
             mock_args.print = []
+            mock_args.all=False
 
             # Setup the Meta mock
             mock_meta_instance = Mock()
@@ -287,6 +305,7 @@ class TestMain:
             mock_args.remove_tags = ["tag1", "tag2"]
             mock_args.image = ["image1.jpg"]
             mock_args.print = []
+            mock_args.all=False
 
             # Setup the Meta mock
             mock_meta_instance = Mock()
@@ -321,6 +340,8 @@ class TestMain:
             mock_args.remove_tags = ["remove1", "remove2"]
             mock_args.image = ["image.jpg"]
             mock_args.print = []
+            mock_args.all=False
+
 
             # Setup the Meta mock
             mock_meta_instance = Mock()

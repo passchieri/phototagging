@@ -66,6 +66,8 @@ class Db:
         """Search for data in the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
+        if field == 'keywords':
+            return self._db.search(Query()[field].any(value))
         return self._db.search(Query()[field] == value)
 
     def get_by_id(self, id: str):
@@ -78,3 +80,9 @@ class Db:
         path = Path(filename)
         results = self.search("id", path.name)
         return results[0] if results else None
+    
+    def all(self):
+        """Get all records from the database."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+        return self._db.all()
