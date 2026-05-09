@@ -86,3 +86,9 @@ class Db:
         if self._db is None:
             raise RuntimeError("Database not connected.")
         return self._db.all()
+
+    def len(self):
+        """Get the number of records in the database."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+        return len(self._db)
