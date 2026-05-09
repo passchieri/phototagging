@@ -23,9 +23,7 @@ PAYLOAD = {
 
 
 class PhotoTag:
-    def __init__(
-        self, url: str = URL, token: str = TOKEN, options: Optional[dict] = None
-    ):
+    def __init__(self, url: str = URL, token: str = TOKEN, options: Optional[dict] = None):
         self.url = url
         self.headers = {"Authorization": f"Bearer {token}"}
         self.payload = PAYLOAD.copy()
@@ -37,9 +35,7 @@ class PhotoTag:
         if not path.is_file():
             raise FileNotFoundError(f"File {filename} does not exist.")
         with open(path, "rb") as file:
-            response = requests.post(
-                self.url, headers=self.headers, data=self.payload, files={"file": file}
-            )
+            response = requests.post(self.url, headers=self.headers, data=self.payload, files={"file": file})
             if not response.ok:
                 response.raise_for_status()
 

@@ -12,6 +12,8 @@ VENV_SCRIPTS   =$(addprefix $(datadir)/venv/bin/,$(PROJECT_SCRIPTS))
 WHEEL          =$(addprefix dist/, $(PACKAGE_NAME)-$(VERSION)-py3-none-any.whl)
 SRCS_TAR       :=$(addprefix dist/,$(PACKAGE_NAME)-$(VERSION).tar.gz)
 
+NOTEBOOKS      =$(wildcard *.ipynb)
+
 REPO			= simpartnerregistry.azurecr.io
 TAG				= simulytic/ps360metrics
 
@@ -51,6 +53,7 @@ init:
 clean:
 	find . -name site-packages -prune -o -name __pycache__  -o -name '*.egg-info' -exec rm -Rf '{}' \+
 	rm -Rf dist build coverage.xml .coverage .pytest_cache docker/*.whl
+	jupyter nbconvert --clear-output --inplace $(NOTEBOOKS) || true
 
 docker: publish_image
 

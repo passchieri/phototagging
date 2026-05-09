@@ -90,12 +90,8 @@ def _process_fields(fields: Optional[list[str]]) -> Optional[list[str]]:
 
     if "shutterstock" in fields or "shutter" in fields:
         if len(fields) > 1:
-            raise ValueError(
-                "The 'shutterstock' field cannot be used with other fields."
-            )
-        print(
-            "Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"
-        )
+            raise ValueError("The 'shutterstock' field cannot be used with other fields.")
+        print("Filename,Description,Keywords,Categories,Editorial,Mature content,illustration")
         return ["shutter"]
 
     if "all" in fields:
@@ -143,9 +139,7 @@ def main():
     removed_tags = args.remove_tags if args.remove_tags else None
     try:
         if not args.token:
-            raise ValueError(
-                "API token is required. Set it with --token or in $HOME/.phototag.env"
-            )
+            raise ValueError("API token is required. Set it with --token or in $HOME/.phototag.env")
         db = Db(args.db)
         phototag = PhotoTag(
             url=args.url,
@@ -161,9 +155,7 @@ def main():
             return 0
 
         for image in args.image:
-            result = meta.get_or_fetch(
-                image, default_tags=default_tags, removed_tags=removed_tags
-            )
+            result = meta.get_or_fetch(image, default_tags=default_tags, removed_tags=removed_tags)
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

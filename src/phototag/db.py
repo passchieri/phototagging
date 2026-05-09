@@ -36,9 +36,7 @@ class Db:
         if self._db is None:
             raise RuntimeError("Database not connected.")
         if self.get_by_id(data["id"]):
-            raise ValueError(
-                f"Data with id '{data['id']}' already exists in the database."
-            )
+            raise ValueError(f"Data with id '{data['id']}' already exists in the database.")
         self._db.insert(data)
 
     def update(self, data: dict):

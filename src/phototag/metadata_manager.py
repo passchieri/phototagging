@@ -74,25 +74,19 @@ class MetadataManager:
     def fetch_for_file(self, filename: str, force=False) -> Optional[MetaData]:
         """Fetch metadata for a file using PhotoTag."""
         if not force and self.get_by_filename(filename):
-            raise ValueError(
-                f"Metadata for file '{filename}' already exists in the database."
-            )
+            raise ValueError(f"Metadata for file '{filename}' already exists in the database.")
         data = self.phototag.fetch_for_file(filename)
         if not data:
             return None
         metadata = MetaData(**data)
         return self.update_db(metadata)
 
-    def ensure_keywords(
-        self, metadata: MetaData, required_keywords: list[str]
-    ) -> MetaData:
+    def ensure_keywords(self, metadata: MetaData, required_keywords: list[str]) -> MetaData:
         """Ensure all keywords are present in metadata."""
         metadata.append_keywords(required_keywords)
         return self.update_db(metadata)
 
-    def remove_keywords(
-        self, metadata: MetaData, keywords_to_remove: list[str]
-    ) -> MetaData:
+    def remove_keywords(self, metadata: MetaData, keywords_to_remove: list[str]) -> MetaData:
         """Remove specified keywords from metadata."""
         metadata.remove_keywords(keywords_to_remove)
         return self.update_db(metadata)
