@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import patch, MagicMock
-from phototag.cli import _create_parser, _process_fields, _print_result, main
+from unittest.mock import Mock, patch, MagicMock
+from phototag.cli import _create_parser, _process_fields, _print_result, main # type: ignore
 from phototag.metadata import MetaData
 
 
@@ -100,7 +100,7 @@ class TestProcessFields:
     def test_process_fields_none(self):
         """Test with None fields."""
         result = _process_fields(None)
-        assert result is None
+        assert result == []
 
     def test_process_fields_all(self):
         """Test with 'all' field."""
@@ -144,7 +144,7 @@ class TestProcessFields:
 class TestPrintResult:
     """Test the _print_result function."""
 
-    def test_print_result_no_fields(self, capsys):
+    def test_print_result_no_fields(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result with no fields specified."""
         result = MagicMock()
         result.to_dict.return_value = {"id": "test.jpg", "title": "Test"}
@@ -156,7 +156,7 @@ class TestPrintResult:
         assert "test.jpg" in captured.out
         assert "Test" in captured.out
 
-    def test_print_result_with_fields(self, capsys):
+    def test_print_result_with_fields(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result with specific fields."""
         result = MagicMock()
         result.filename = "test.jpg"
@@ -168,7 +168,7 @@ class TestPrintResult:
         assert "test.jpg" in captured.out
         assert "Test Title" in captured.out
 
-    def test_print_result_invalid_field(self, capsys):
+    def test_print_result_invalid_field(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result with invalid field."""
         result = MagicMock()
         result.invalid_field = None
@@ -178,7 +178,7 @@ class TestPrintResult:
         captured = capsys.readouterr()
         assert "No such field" in captured.out
 
-    def test_print_result_callable_field(self, capsys):
+    def test_print_result_callable_field(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result with callable field."""
         result = MagicMock()
         result.pexels = MagicMock(return_value="pexels_keywords")
@@ -187,7 +187,7 @@ class TestPrintResult:
         captured = capsys.readouterr()
         assert "pexels_keywords" in captured.out
 
-    def test_print_result_shutter_format(self, capsys):
+    def test_print_result_shutter_format(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result in shutter format."""
         result = MagicMock()
         result.filename = "test.jpg"
@@ -200,7 +200,7 @@ class TestPrintResult:
         assert "Test Title" in captured.out
         assert '"keywords"' in captured.out
 
-    def test_print_result_with_all_fields(self, capsys):
+    def test_print_result_with_all_fields(self, capsys: pytest.CaptureFixture[str]):
         """Test printing result with all fields."""
         result = MetaData(
             id="test.jpg",
@@ -226,7 +226,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_no_token(self, mock_meta, mock_phototag, mock_db, capsys):
+    def test_main_no_token(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock, capsys: pytest.CaptureFixture[str]):
         """Test main function with no token."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
@@ -243,7 +243,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_with_valid_args(self, mock_meta, mock_phototag, mock_db):
+    def test_main_with_valid_args(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock):
         """Test main function with valid arguments."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
@@ -265,7 +265,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_with_images(self, mock_meta, mock_phototag, mock_db):
+    def test_main_with_images(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock):
         """Test main function processing images."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
@@ -297,7 +297,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_with_remove_tags(self, mock_meta, mock_phototag, mock_db):
+    def test_main_with_remove_tags(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock):
         """Test main function with remove-tags argument."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
@@ -332,7 +332,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_with_tags_and_remove_tags(self, mock_meta, mock_phototag, mock_db):
+    def test_main_with_tags_and_remove_tags(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock):
         """Test main function with both tags and remove-tags arguments."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
@@ -368,7 +368,7 @@ class TestMain:
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
     @patch("phototag.cli.MetadataManager")
-    def test_main_exception_handling(self, mock_meta, mock_phototag, mock_db, capsys):
+    def test_main_exception_handling(self, mock_meta: Mock, mock_phototag: Mock, mock_db: Mock, capsys: pytest.CaptureFixture[str]):
         """Test main function exception handling."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()

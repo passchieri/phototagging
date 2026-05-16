@@ -12,6 +12,8 @@ dependencies = [
 "python-dotenv",
 "Pillow",
 "matplotlib",
+"py3exiv2",
+"flask",
 ] 
 description = "Igors photo tagging library" 
 dynamic = ["version"] 

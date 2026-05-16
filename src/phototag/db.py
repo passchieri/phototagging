@@ -1,5 +1,7 @@
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from types import TracebackType
+from typing import Any, Optional, Sequence
 from tinydb import Query, TinyDB
 
 
@@ -10,16 +12,21 @@ class Db:
 
     def __init__(self, db_path: str):
         self.db_path = db_path
-        self._db = None
+        self._db: Optional[Any] = None
 
-    def __enter__(self):
+    def __enter__(self) -> "Db":
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         self.close()
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect to the database."""
         self._db = TinyDB(self.db_path)
 
@@ -29,7 +36,7 @@ class Db:
             self._db.close()
             self._db = None
 
-    def insert(self, data: dict):
+    def insert(self, data: Mapping[str, Any]) -> None:
         """Insert data into the database."""
         assert "filename" in data, "Data must contain 'filename' key."
         assert "id" in data, "Data must contain 'id' key."
@@ -39,7 +46,7 @@ class Db:
             raise ValueError(f"Data with id '{data['id']}' already exists in the database.")
         self._db.insert(data)
 
-    def update(self, data: dict):
+    def update(self, data: Mapping[str, Any]) -> None:
         """Update data in the database."""
         assert "filename" in data, "Data must contain 'filename' key."
         assert "id" in data, "Data must contain 'id' key."
@@ -49,7 +56,7 @@ class Db:
             raise ValueError(f"No record found with id '{data['id']}'.")
         self._db.update(data, Query().id == data["id"])
 
-    def update_or_insert(self, data: dict):
+    def update_or_insert(self, data: Mapping[str, Any]) -> None:
         """Update data in the database or insert it if it doesn't exist."""
         assert "filename" in data, "Data must contain 'filename' key."
         assert "id" in data, "Data must contain 'id' key."
@@ -60,7 +67,7 @@ class Db:
         else:
             self.insert(data)
 
-    def search(self, field: str, value: Any):
+    def search(self, field: str, value: Any) -> Sequence[dict[str, Any]]:
         """Search for data in the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
@@ -68,24 +75,24 @@ class Db:
             return self._db.search(Query()[field].any(value))
         return self._db.search(Query()[field] == value)
 
-    def get_by_id(self, id: str):
+    def get_by_id(self, id: str) -> Optional[dict[str, Any]]:
         """Get a single record from the database by id."""
         results = self.search("id", id)
         return results[0] if results else None
 
-    def get_by_filename(self, filename: str):
+    def get_by_filename(self, filename: str) -> Optional[dict[str, Any]]:
         """Get a single record from the database by filename."""
         path = Path(filename)
         results = self.search("id", path.name)
         return results[0] if results else None
 
-    def all(self):
+    def all(self) -> Sequence[dict[str, Any]]:
         """Get all records from the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
         return self._db.all()
 
-    def len(self):
+    def len(self) -> int:
         """Get the number of records in the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")

@@ -1,5 +1,7 @@
+from typing import Any
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 import requests
 from phototag.phototag import PhotoTag, URL, TOKEN, PAYLOAD
@@ -12,14 +14,14 @@ def phototag():
 
 
 @pytest.fixture
-def custom_phototag():
+def custom_phototag() -> PhotoTag:
     """Create a PhotoTag instance with custom options."""
-    custom_options = {"maxKeywords": 30, "language": "es"}
+    custom_options: dict[str, Any] = {"maxKeywords": 30, "language": "es"}
     return PhotoTag(options=custom_options)
 
 
 @pytest.fixture
-def sample_response():
+def sample_response() -> dict[str, Any]:
     """Create a sample API response."""
     return {
         "data": {
@@ -54,8 +56,7 @@ class TestPhotoTagInit:
 
     def test_init_custom_options(self):
         """Test PhotoTag initialization with custom options."""
-        custom_options = {"maxKeywords": 30, "language": "es"}
-        phototag = PhotoTag(options=custom_options)
+        phototag = PhotoTag(options={"maxKeywords": 30, "language": "es"})
         assert phototag.payload["maxKeywords"] == 30
         assert phototag.payload["language"] == "es"
         # Other default options should still be present
@@ -78,14 +79,14 @@ class TestPhotoTagInit:
 class TestPhotoTagFetchForFile:
     """Test the fetch_for_file method."""
 
-    def test_fetch_for_file_success(self, phototag, sample_response):
+    def test_fetch_for_file_success(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test successful file fetch and API call."""
         test_file = "test_image.jpg"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()
@@ -100,40 +101,38 @@ class TestPhotoTagFetchForFile:
             assert result["filename"] == "test_image.jpg"
             assert result["id"] == "test_image.jpg"
 
-    def test_fetch_for_file_not_found(self, phototag):
+    def test_fetch_for_file_not_found(self, phototag: PhotoTag):
         """Test that FileNotFoundError is raised for non-existent file."""
         with patch("pathlib.Path.is_file", return_value=False):
             with pytest.raises(FileNotFoundError, match="does not exist"):
                 phototag.fetch_for_file("nonexistent.jpg")
 
-    def test_fetch_for_file_api_error(self, phototag):
+    def test_fetch_for_file_api_error(self, phototag: PhotoTag):
         """Test that HTTPError is raised on API failure."""
         test_file = "test_image.jpg"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()
             mock_response.ok = False
-            mock_response.raise_for_status.side_effect = requests.HTTPError(
-                "404 Not Found"
-            )
+            mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
             mock_post.return_value = mock_response
 
             with pytest.raises(requests.HTTPError):
                 phototag.fetch_for_file(test_file)
 
-    def test_fetch_for_file_sends_correct_headers(self, phototag, sample_response):
+    def test_fetch_for_file_sends_correct_headers(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test that correct headers are sent to API."""
         test_file = "test_image.jpg"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()
@@ -147,14 +146,14 @@ class TestPhotoTagFetchForFile:
             call_args = mock_post.call_args
             assert call_args[1]["headers"] == phototag.headers
 
-    def test_fetch_for_file_sends_payload(self, phototag, sample_response):
+    def test_fetch_for_file_sends_payload(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test that payload is sent to API."""
         test_file = "test_image.jpg"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()
@@ -168,13 +167,13 @@ class TestPhotoTagFetchForFile:
             call_args = mock_post.call_args
             assert call_args[1]["data"] == phototag.payload
 
-    def test_fetch_for_file_sends_file(self, phototag, sample_response):
+    def test_fetch_for_file_sends_file(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test that file is sent to API."""
         test_file = "test_image.jpg"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
+            patch("builtins.open", create=True),
             patch("phototag.phototag.requests.post") as mock_post,
         ):
 
@@ -190,14 +189,14 @@ class TestPhotoTagFetchForFile:
             assert "files" in call_args[1]
             assert "file" in call_args[1]["files"]
 
-    def test_fetch_for_file_adds_filename_and_id(self, phototag, sample_response):
+    def test_fetch_for_file_adds_filename_and_id(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test that filename and id are added to response."""
         test_file = "my_photo.png"
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()
@@ -210,14 +209,14 @@ class TestPhotoTagFetchForFile:
             assert result["filename"] == "my_photo.png"
             assert result["id"] == "my_photo.png"
 
-    def test_fetch_for_file_with_path_object(self, phototag, sample_response):
+    def test_fetch_for_file_with_path_object(self, phototag: PhotoTag, sample_response: dict[str, Any]):
         """Test fetch_for_file with Path object."""
         test_file = Path("images/test.jpg")
 
         with (
             patch("pathlib.Path.is_file", return_value=True),
-            patch("builtins.open", create=True) as mock_open,
             patch("phototag.phototag.requests.post") as mock_post,
+            patch("builtins.open", create=True),
         ):
 
             mock_response = Mock()

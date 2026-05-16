@@ -5,6 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Flask",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "phototag.ui.app",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "--app",
+                "phototag.ui.app",
+                "run",
+                "--no-debugger",
+                "--no-reload",
+            ],
+            "jinja": true,
+            "autoStartBrowser": false
+        },
+        {
             "name": "Python Debugger: Main File with Arguments",
             "type": "debugpy",
             "request": "launch",

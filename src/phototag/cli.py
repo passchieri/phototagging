@@ -2,6 +2,7 @@ import argparse
 from typing import Optional
 from .db import Db
 from .metadata_manager import MetadataManager
+from .metadata import MetaData
 from .phototag import PhotoTag
 import json
 
@@ -83,10 +84,10 @@ def _create_parser():
     return parser
 
 
-def _process_fields(fields: Optional[list[str]]) -> Optional[list[str]]:
+def _process_fields(fields: Optional[list[str]]) -> list[str]:
     """Process the fields argument and handle special cases."""
     if not fields:
-        return fields
+        return []
 
     if "shutterstock" in fields or "shutter" in fields:
         if len(fields) > 1:
@@ -108,7 +109,10 @@ def _process_fields(fields: Optional[list[str]]) -> Optional[list[str]]:
     return fields
 
 
-def _print_result(result, fields: list[str]):
+def _print_result(result: MetaData | None, fields: list[str]) -> None:
+    if result is None:
+        print("No metadata found.")
+        return
     if fields and "shutter" not in fields:
         for field in fields:
             attr = getattr(result, field, None)

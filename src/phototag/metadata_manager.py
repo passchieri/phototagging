@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from .metadata import MetaData
 from .db import Db
-from .phototag import PhotoTag
+from .phototag import PhotoTag, PhotoTagResponse
 
 
 class MetadataManager:
@@ -29,8 +29,8 @@ class MetadataManager:
     def get_or_fetch(
         self,
         filename: str,
-        default_tags: Optional[list] = None,
-        removed_tags: Optional[list] = None,
+        default_tags: Optional[list[str]] = None,
+        removed_tags: Optional[list[str]] = None,
     ) -> Optional[MetaData]:
         """Get metadata for a file, or fetch it if not found.
         Makes sure all tags from default_tags are included, and remove tags from removed_tags.
@@ -56,9 +56,9 @@ class MetadataManager:
             data = c.get_by_id(id)
         if data:
             return MetaData(**data)
-        data = self.phototag.fetch_for_file(id)
-        if data:
-            metadata = MetaData(**data)
+        fetched_data:PhotoTagResponse = self.phototag.fetch_for_file(id)
+        if fetched_data:
+            metadata = MetaData(**fetched_data)
             self.db.insert(metadata.to_dict())
             return metadata
         return None
@@ -71,7 +71,7 @@ class MetadataManager:
             return MetaData(**data)
         return None
 
-    def fetch_for_file(self, filename: str, force=False) -> Optional[MetaData]:
+    def fetch_for_file(self, filename: str, force: bool = False) -> Optional[MetaData]:
         """Fetch metadata for a file using PhotoTag."""
         if not force and self.get_by_filename(filename):
             raise ValueError(f"Metadata for file '{filename}' already exists in the database.")
@@ -91,7 +91,7 @@ class MetadataManager:
         metadata.remove_keywords(keywords_to_remove)
         return self.update_db(metadata)
 
-    def update_db(self, metadata):
+    def update_db(self, metadata: MetaData) -> MetaData:
         """Update or insert metadata into the database."""
         with self.db:
             self.db.update_or_insert(metadata.to_dict())

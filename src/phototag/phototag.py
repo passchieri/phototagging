@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Any, Mapping, Optional, TypedDict, cast
 import requests
 from pathlib import Path
 
-URL = "https://server.phototag.ai/api/keywords"
+URL = "https://server.phototag.ai/api/keywords"    
 TOKEN = "c9245585-facb-4737-b91f-b7a32ca098ad"
 
 
-PAYLOAD = {
+PAYLOAD:dict[str,Any] = {
     "addMetadata": False,
     "keywordsOnly": False,
     "saveFile": False,
@@ -21,16 +21,23 @@ PAYLOAD = {
     # "customContext": "big city",
 }
 
+class PhotoTagResponse(TypedDict):
+    filename: str
+    id: str
+    title: Optional[str]
+    description: Optional[str]
+    keywords: Optional[list[str]]
+
 
 class PhotoTag:
-    def __init__(self, url: str = URL, token: str = TOKEN, options: Optional[dict] = None):
+    def __init__(self, url: str = URL, token: str = TOKEN, options: Optional[dict[str,Any]] = None):
         self.url = url
         self.headers = {"Authorization": f"Bearer {token}"}
         self.payload = PAYLOAD.copy()
         if options:
             self.payload.update(options)
 
-    def fetch_for_file(self, filename: str) -> dict:
+    def fetch_for_file(self, filename: str) -> PhotoTagResponse:
         path = Path(filename)
         if not path.is_file():
             raise FileNotFoundError(f"File {filename} does not exist.")
@@ -39,7 +46,12 @@ class PhotoTag:
             if not response.ok:
                 response.raise_for_status()
 
-            data = response.json()["data"]
-            data["filename"] = path.name
-            data["id"] = path.name
-            return data
+            raw_data = response.json()["data"]
+            if not isinstance(raw_data, dict):
+                raise TypeError("Expected response data to be a mapping.")
+
+            data=cast(Mapping[str, Any], raw_data)
+            normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
+            normalized_data["filename"] = path.name
+            normalized_data["id"] = path.name
+            return cast(PhotoTagResponse, normalized_data)
