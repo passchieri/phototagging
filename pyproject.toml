@@ -19,7 +19,7 @@ description = "Igors photo tagging library"
 dynamic = ["version"] 
 license = {text = "MIT"} 
 name = "phototag" 
-requires-python = ">=3.9,<4.0" 
+requires-python = ">=3.14" 
 
 [project.urls]
 #"Bug Tracker" = "https://Z003KBKV@dev.azure.com/Z003KBKV/Simulytic/_git/psimclient"
