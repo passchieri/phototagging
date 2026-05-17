@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Optional
+from sortedcontainers import SortedSet 
 
 
 @dataclass
@@ -8,13 +9,13 @@ class MetaData:
 
     id: str
     filename: str
-    keywords: set[str] = field(default_factory=set[str])
+    keywords: SortedSet[str] = field(default_factory=SortedSet[str])
     title: Optional[str] = None
     description: Optional[str] = None
 
     def __post_init__(self):
         """Normalize keywords to lowercase and ensure they are stored as a set."""
-        self.keywords = set(kw.lower() for kw in self.keywords)
+        self.keywords = SortedSet(str(kw).lower() for kw in self.keywords)
 
     def append_keywords(self, new_keywords: Iterable[str]):
         """Append new keywords to the existing set of keywords."""
@@ -33,13 +34,13 @@ class MetaData:
         """Return keywords formatted for Pexels."""
         if not self.keywords:
             return ""
-        return ", ".join(sorted(set(self.keywords)))
+        return ", ".join(self.keywords)
 
     def instagram(self) -> str:
         """Return keywords formatted for Instagram hashtags."""
         if not self.keywords:
             return ""
-        return " ".join(f"#{k.replace(' ', '')}" for k in sorted(set(self.keywords)))
+        return " ".join(f"#{k.replace(' ', '')}" for k in self.keywords)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the MetaData instance to a dictionary."""

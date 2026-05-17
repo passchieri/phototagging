@@ -14,6 +14,7 @@ dependencies = [
 "matplotlib",
 "py3exiv2",
 "flask",
+"sortedcontainers",
 ] 
 description = "Igors photo tagging library" 
 dynamic = ["version"] 
@@ -62,6 +63,7 @@ dev = [
   "nbqa~=1.9",
   "isort~=8.0",
   "jupyter~=1.1",
+  "sortedcontainers-stubs",
 ]
 
 testing = [

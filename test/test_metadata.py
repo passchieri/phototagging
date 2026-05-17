@@ -1,4 +1,6 @@
 # type: ignore
+from sortedcontainers import SortedSet
+
 from phototag.metadata import MetaData
 
 
@@ -37,11 +39,11 @@ def test_missing_keywords():
         assert False, "MetaData should not raise TypeError for missing keywords"
 
     assert (
-        isinstance(metadata2.keywords, set) and len(metadata2.keywords) == 0
+        isinstance(metadata2.keywords, SortedSet) and len(metadata2.keywords) == 0
     ), "MetaData should have empty keywords if not provided"
     metadata1.keywords.add("container ship")
     assert (
-        isinstance(metadata2.keywords, set) and len(metadata2.keywords) == 0
+        isinstance(metadata2.keywords, SortedSet) and len(metadata2.keywords) == 0
     ), "MetaData instances should not share the same keywords list"
 
 
