@@ -9,7 +9,7 @@ class MetaData:
 
     id: str
     filename: str
-    keywords: list[str] | None = field(default_factory=list[str])
+    keywords: list[str]  = field(default_factory=list[str])
     title: Optional[str] = None
     description: Optional[str] = None
 

@@ -26,28 +26,32 @@ class MetadataManager:
             data = c.search(field, value)
         return [MetaData(**item) for item in data]
 
-    def get_or_fetch(
+    def get_or_create(
         self,
         filename: str,
-        default_tags: Optional[list[str]] = None,
-        removed_tags: Optional[list[str]] = None,
+        force: bool = False,
+        default_keywords: Optional[list[str]] = None,
+        keywords_to_remove: Optional[list[str]] = None,
     ) -> Optional[MetaData]:
-        """Get metadata for a file, or fetch it if not found.
-        Makes sure all tags from default_tags are included, and remove tags from removed_tags.
+        """Get metadata for a file, or create it if not found.
+
+        It ensures that all keywords from default_keywords are included, and removes keywords from
+        keywords_to_remove.
+
+        Args:
+            filename: The name of the file to get or create metadata for.
+            force: If True, forces creation of metadata even if it already exists.
+            default_keywords: A list of keywords to ensure are included in the metadata.
+            keywords_to_remove: A list of keywords to remove from the metadata.
         """
 
         metadata = self.get_by_filename(filename)
-        if not metadata:
-            metadata = self.fetch_for_file(filename)
-
-        if not metadata:
-            raise ValueError(f"Could not fetch metadata for file '{filename}'.")
-        if not metadata.keywords:
-            metadata.keywords = []
-        if default_tags:
-            self.ensure_keywords(metadata, default_tags)
-        if removed_tags:
-            self.remove_keywords(metadata, removed_tags)
+        if not metadata or force:
+            metadata = self.create_for_file(filename, force,required_keywords=default_keywords, keywords_to_remove=keywords_to_remove)
+            if not metadata:
+                raise ValueError(f"Could not create metadata for file '{filename}'.")
+        else:
+            self.update_keywords(metadata, default_keywords, keywords_to_remove)
         return metadata
 
     def get_by_id(self, id: str) -> Optional[MetaData]:
@@ -56,7 +60,7 @@ class MetadataManager:
             data = c.get_by_id(id)
         if data:
             return MetaData(**data)
-        fetched_data:PhotoTagResponse = self.phototag.fetch_for_file(id)
+        fetched_data: PhotoTagResponse = self.phototag.fetch_for_file(id)
         if fetched_data:
             metadata = MetaData(**fetched_data)
             self.db.insert(metadata.to_dict())
@@ -71,24 +75,34 @@ class MetadataManager:
             return MetaData(**data)
         return None
 
-    def fetch_for_file(self, filename: str, force: bool = False) -> Optional[MetaData]:
-        """Fetch metadata for a file using PhotoTag."""
+    def create_for_file(
+        self,
+        filename: str,
+        force: bool = False,
+        required_keywords: Optional[list[str]] = None,
+        keywords_to_remove: Optional[list[str]] = None,
+    ) -> Optional[MetaData]:
+        """Create metadata for a file using PhotoTag."""
         if not force and self.get_by_filename(filename):
             raise ValueError(f"Metadata for file '{filename}' already exists in the database.")
         data = self.phototag.fetch_for_file(filename)
         if not data:
             return None
         metadata = MetaData(**data)
-        return self.update_db(metadata)
+        metadata = self.update_keywords(metadata, required_keywords, keywords_to_remove)
+        return metadata
 
-    def ensure_keywords(self, metadata: MetaData, required_keywords: list[str]) -> MetaData:
-        """Ensure all keywords are present in metadata."""
-        metadata.append_keywords(required_keywords)
-        return self.update_db(metadata)
-
-    def remove_keywords(self, metadata: MetaData, keywords_to_remove: list[str]) -> MetaData:
-        """Remove specified keywords from metadata."""
-        metadata.remove_keywords(keywords_to_remove)
+    def update_keywords(
+        self,
+        metadata: MetaData,
+        required_keywords: Optional[list[str]] = None,
+        keywords_to_remove: Optional[list[str]] = None,
+    ) -> MetaData:
+        """Update keywords in metadata."""
+        if required_keywords is not None:
+            metadata.append_keywords(required_keywords)
+        if keywords_to_remove is not None:
+            metadata.remove_keywords(keywords_to_remove)
         return self.update_db(metadata)
 
     def update_db(self, metadata: MetaData) -> MetaData:

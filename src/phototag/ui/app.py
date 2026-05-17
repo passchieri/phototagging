@@ -238,7 +238,7 @@ def index():
             metadata = metadata_manager.get_by_filename(selected_image)
             if metadata is None:
                 try:
-                    metadata = metadata_manager.get_or_fetch(selected_image)
+                    metadata = metadata_manager.get_or_create(selected_image)
                 except Exception:
                     metadata = None
             metadata_text = format_metadata(metadata)

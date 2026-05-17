@@ -24,9 +24,9 @@ PAYLOAD:dict[str,Any] = {
 class PhotoTagResponse(TypedDict):
     filename: str
     id: str
+    keywords: list[str]
     title: Optional[str]
     description: Optional[str]
-    keywords: Optional[list[str]]
 
 
 class PhotoTag:
@@ -54,4 +54,6 @@ class PhotoTag:
             normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
             normalized_data["filename"] = path.name
             normalized_data["id"] = path.name
+            if not "keywords" in normalized_data :
+                normalized_data["keywords"] = []
             return cast(PhotoTagResponse, normalized_data)

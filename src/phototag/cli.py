@@ -139,8 +139,8 @@ def _print_result(result: MetaData | None, fields: list[str]) -> None:
 def main():
     parser = _create_parser()
     args = parser.parse_args()
-    default_tags = args.tags if args.tags else None
-    removed_tags = args.remove_tags if args.remove_tags else None
+    default_keywords = args.tags if args.tags else None
+    keywords_to_remove = args.remove_tags if args.remove_tags else None
     try:
         if not args.token:
             raise ValueError("API token is required. Set it with --token or in $HOME/.phototag.env")
@@ -159,7 +159,7 @@ def main():
             return 0
 
         for image in args.image:
-            result = meta.get_or_fetch(image, default_tags=default_tags, removed_tags=removed_tags)
+            result = meta.get_or_create(image, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove)
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

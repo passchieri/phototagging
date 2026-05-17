@@ -284,7 +284,7 @@ class TestMain:
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
-            mock_meta_instance.get_or_fetch.return_value = mock_result
+            mock_meta_instance.get_or_create.return_value = mock_result
             mock_meta.return_value = mock_meta_instance
 
             mock_parser.return_value.parse_args.return_value = mock_args
@@ -292,7 +292,7 @@ class TestMain:
             with patch("phototag.cli._print_result"):
                 result = main()
             assert result == 0
-            assert mock_meta_instance.get_or_fetch.call_count == 2
+            assert mock_meta_instance.get_or_create.call_count == 2
 
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
@@ -316,7 +316,7 @@ class TestMain:
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
-            mock_meta_instance.get_or_fetch.return_value = mock_result
+            mock_meta_instance.get_or_create.return_value = mock_result
             mock_meta.return_value = mock_meta_instance
 
             mock_parser.return_value.parse_args.return_value = mock_args
@@ -324,10 +324,10 @@ class TestMain:
             with patch("phototag.cli._print_result"):
                 result = main()
             assert result == 0
-            # Verify get_or_fetch was called with remove_tags
-            mock_meta_instance.get_or_fetch.assert_called_once()
-            call_kwargs = mock_meta_instance.get_or_fetch.call_args[1]
-            assert call_kwargs["removed_tags"] == ["tag1", "tag2"]
+            # Verify get_or_create was called with remove_tags
+            mock_meta_instance.get_or_create.assert_called_once()
+            call_kwargs = mock_meta_instance.get_or_create.call_args[1]
+            assert call_kwargs["keywords_to_remove"] == ["tag1", "tag2"]
 
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
@@ -351,7 +351,7 @@ class TestMain:
             mock_result.to_dict.return_value = {}
             mock_result.pexels.return_value = ""
             mock_result.instagram.return_value = ""
-            mock_meta_instance.get_or_fetch.return_value = mock_result
+            mock_meta_instance.get_or_create.return_value = mock_result
             mock_meta.return_value = mock_meta_instance
 
             mock_parser.return_value.parse_args.return_value = mock_args
@@ -359,11 +359,11 @@ class TestMain:
             with patch("phototag.cli._print_result"):
                 result = main()
             assert result == 0
-            # Verify get_or_fetch was called with both default_tags and removed_tags
-            mock_meta_instance.get_or_fetch.assert_called_once()
-            call_kwargs = mock_meta_instance.get_or_fetch.call_args[1]
-            assert call_kwargs["default_tags"] == ["add1", "add2"]
-            assert call_kwargs["removed_tags"] == ["remove1", "remove2"]
+            # Verify get_or_create was called with both default_tags and removed_tags
+            mock_meta_instance.get_or_create.assert_called_once()
+            call_kwargs = mock_meta_instance.get_or_create.call_args[1]
+            assert call_kwargs["default_keywords"] == ["add1", "add2"]
+            assert call_kwargs["keywords_to_remove"] == ["remove1", "remove2"]
 
     @patch("phototag.cli.Db")
     @patch("phototag.cli.PhotoTag")
