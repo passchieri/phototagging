@@ -35,7 +35,7 @@ def sample_metadata():
         "filename": "test_image.jpg",
         "title": "Test Image",
         "description": "A test image",
-        "keywords": ["test", "image"],
+        "keywords": {"test", "image"},
     }
 
 
@@ -108,12 +108,12 @@ class TestMetaGetOrCreate:
     def test_get_or_create_with_default_tags(self, meta_manager, mock_db, mock_phototag, sample_metadata):
         """Test get_or_create adds default tags."""
         metadata = sample_metadata.copy()
-        metadata["keywords"] = ["existing"]
+        metadata["keywords"] = {"existing"}
         mock_db.get_by_filename.return_value = metadata
 
         result = meta_manager.get_or_create("test_image.jpg", default_keywords=["new_tag"])
         # Keywords should be extended with new tags
-        assert "new_tag" in result.keywords or len(result.keywords) > 0
+        assert "new_tag" in result.keywords and len(result.keywords) == 2
 
     def test_get_or_create_initializes_keywords_if_none(self, meta_manager, mock_db, mock_phototag, sample_metadata):
         """Test get_or_create initializes keywords list if None."""
@@ -122,7 +122,7 @@ class TestMetaGetOrCreate:
         mock_db.get_by_filename.return_value = metadata
 
         result = meta_manager.get_or_create("test_image.jpg")
-        assert result.keywords == []
+        assert result.keywords == set()
 
     def test_get_or_create_with_removed_tags(self, meta_manager, mock_db, mock_phototag, sample_metadata):
         """Test get_or_create removes specified tags."""
@@ -152,8 +152,7 @@ class TestMetaGetById:
         mock_phototag.fetch_for_file.return_value = sample_metadata
 
         result = meta_manager.get_by_id("test_image.jpg")
-        assert result.filename == "test_image.jpg"
-        mock_db.insert.assert_called_once()
+        assert result == None
 
     def test_get_by_id_not_found(self, meta_manager, mock_db, mock_phototag):
         """Test get_by_id returns None when not found anywhere."""

@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from .metadata import MetaData
 from .db import Db
-from .phototag import PhotoTag, PhotoTagResponse
+from .phototag import PhotoTag
 
 
 class MetadataManager:
@@ -62,11 +62,6 @@ class MetadataManager:
             data = c.get_by_id(id)
         if data:
             return MetaData(**data)
-        fetched_data: PhotoTagResponse = self.phototag.fetch_for_file(id)
-        if fetched_data:
-            metadata = MetaData(**fetched_data)
-            self.db.insert(metadata.to_dict())
-            return metadata
         return None
 
     def get_by_filename(self, filename: str) -> Optional[MetaData]:
@@ -76,6 +71,14 @@ class MetadataManager:
         if data:
             return MetaData(**data)
         return None
+
+    def delete_by_filename(self, filename: str) -> None:
+        """Delete a single record by filename."""
+        data = self.get_by_filename(filename)  # Ensure the record exists before attempting to delete
+        if not data:
+            raise ValueError(f"No record found with filename '{filename}'.")
+        with self.db as c:
+            c.delete_by_filename(filename)
 
     def create_for_file(
         self,
@@ -90,7 +93,13 @@ class MetadataManager:
         data = self.phototag.fetch_for_file(filename)
         if not data:
             return None
-        metadata = MetaData(**data)
+        metadata = MetaData(
+            keywords=set(data.get("keywords", [])),
+            description=data.get("description"),
+            title=data.get("title"),
+            id=data["id"],
+            filename=data["filename"],
+        )
         metadata = self.update_keywords(metadata, required_keywords, keywords_to_remove)
         return metadata
 

@@ -207,7 +207,7 @@ class TestPrintResult:
             filename="test.jpg",
             title="Test Title",
             description="Test Description",
-            keywords=["apple", "banana"],
+            keywords={"apple", "banana"},
         )
 
         fields = _process_fields(["all"])

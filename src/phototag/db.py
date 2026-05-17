@@ -56,6 +56,14 @@ class Db:
             raise ValueError(f"No record found with id '{data['id']}'.")
         self._db.update(data, Query().id == data["id"])
 
+    def delete(self, id: str) -> None:
+        """Delete data from the database by id."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+        if not self.get_by_id(id):
+            raise ValueError(f"No record found with id '{id}'.")
+        self._db.remove(Query().id == id)
+
     def update_or_insert(self, data: Mapping[str, Any]) -> None:
         """Update data in the database or insert it if it doesn't exist."""
         assert "filename" in data, "Data must contain 'filename' key."
@@ -85,6 +93,14 @@ class Db:
         path = Path(filename)
         results = self.search("id", path.name)
         return results[0] if results else None
+
+    def delete_by_filename(self, filename: str) -> None:
+        """Delete a single record by filename."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+        data = self.get_by_filename(filename)
+        if data:
+            self._db.remove(Query().id == data["id"])
 
     def all(self) -> Sequence[dict[str, Any]]:
         """Get all records from the database."""

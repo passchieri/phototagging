@@ -1,3 +1,4 @@
+# type: ignore
 from phototag.metadata import MetaData
 
 
@@ -7,7 +8,7 @@ def test_missing_title():
         MetaData(
             id="passchier-090.jpg",
             filename="passchier-090.jpg",
-            keywords=["container ship", "river navigation"],
+            keywords={"container ship", "river navigation"},
             # title="Container ship navigates river waters near buoy at dusk in peaceful setting with clouds",
             description="A large red container ship is traveling along a river, loaded with colorful cargo containers stacked high on its deck.",
         )
@@ -22,26 +23,25 @@ def test_missing_keywords():
         metadata1 = MetaData(
             id="passchier-090.jpg",
             filename="passchier-090.jpg",
-            # keywords=["container ship", "river navigation"],
+            # keywords={"container ship", "river navigation"},
             title="Container ship navigates river waters near buoy at dusk in peaceful setting with clouds",
             description="A large red container ship is traveling along a river, loaded with colorful cargo containers stacked high on its deck.",
         )
         metadata2 = MetaData(
             id="passchier-090.jpg",
             filename="passchier-090.jpg",
-            # keywords=["container ship", "river navigation"],
             title="Container ship navigates river waters near buoy at dusk in peaceful setting with clouds",
             description="A large red container ship is traveling along a river, loaded with colorful cargo containers stacked high on its deck.",
         )
-    except TypeError as e:
+    except TypeError:
         assert False, "MetaData should not raise TypeError for missing keywords"
 
     assert (
-        metadata1.keywords == []
+        isinstance(metadata2.keywords, set) and len(metadata2.keywords) == 0
     ), "MetaData should have empty keywords if not provided"
-    metadata1.keywords.append("container ship")
+    metadata1.keywords.add("container ship")
     assert (
-        metadata2.keywords == []
+        isinstance(metadata2.keywords, set) and len(metadata2.keywords) == 0
     ), "MetaData instances should not share the same keywords list"
 
 
@@ -51,7 +51,7 @@ def test_missing_filename():
         MetaData(
             id="passchier-090.jpg",
             # filename="passchier-090.jpg",
-            keywords=["container ship", "river navigation"],
+            keywords={"container ship", "river navigation"},
             title="Container ship navigates river waters near buoy at dusk in peaceful setting with clouds",
             description="A large red container ship is traveling along a river, loaded with colorful cargo containers stacked high on its deck.",
         )
@@ -97,10 +97,7 @@ def test_metadata():
     assert "clouds" in metadata.keywords
     assert "peaceful setting" in metadata.keywords
 
-    assert (
-        metadata.title
-        == "Container ship navigates river waters near buoy at dusk in peaceful setting with clouds"
-    )
+    assert metadata.title == "Container ship navigates river waters near buoy at dusk in peaceful setting with clouds"
     assert (
         metadata.description
         == "A large red container ship is traveling along a river, loaded with colorful cargo containers stacked high on its deck. The vessel moves steadily past a bright red navigation buoy that marks the waterway. The sky is filled with soft clouds, reflecting the warm hues of dusk, creating a serene atmosphere. Lush greenery lines the riverbank, enhancing the peacefulness of the scene."
@@ -110,12 +107,8 @@ def test_metadata():
     assert "#shippingindustry" in metadata.instagram()
     result = metadata.to_dict()
     expected = {**data, "keywords": result["keywords"]}
-    assert (
-        result == expected
-    ), "to_dict should return the original data (keywords may differ in type)"
-    assert set(result["keywords"]) == set(
-        data["keywords"]
-    ), "to_dict keywords should match original set of keywords"
+    assert result == expected, "to_dict should return the original data (keywords may differ in type)"
+    assert set(result["keywords"]) == set(data["keywords"]), "to_dict keywords should match original set of keywords"
 
 
 def test_append_keywords():
@@ -123,7 +116,7 @@ def test_append_keywords():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=["sunset", "beach"],
+        keywords={"sunset", "beach"},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
@@ -141,7 +134,7 @@ def test_remove_keywords():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=["sunset", "beach", "ocean", "vacation", "travel"],
+        keywords={"sunset", "beach", "ocean", "vacation", "travel"},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
@@ -158,7 +151,7 @@ def test_remove_keywords_partial_match():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=["sunset", "beach", "ocean"],
+        keywords={"sunset", "beach", "ocean"},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
@@ -174,12 +167,12 @@ def test_remove_all_keywords():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=["sunset", "beach"],
+        keywords={"sunset", "beach"},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
     metadata.remove_keywords(["sunset", "beach"])
-    assert metadata.keywords == [], "remove_keywords should allow removing all keywords"
+    assert metadata.keywords == set(), "remove_keywords should allow removing all keywords"
 
 
 def test_remove_keywords_empty_list():
@@ -187,7 +180,7 @@ def test_remove_keywords_empty_list():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=["sunset", "beach", "ocean"],
+        keywords={"sunset", "beach", "ocean"},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
@@ -204,9 +197,9 @@ def test_remove_keywords_from_empty():
     metadata = MetaData(
         id="test.jpg",
         filename="test.jpg",
-        keywords=[],
+        keywords={},
         title="Sunset at the Beach",
         description="A beautiful sunset at the beach.",
     )
     metadata.remove_keywords(["sunset", "beach"])
-    assert metadata.keywords == [], "remove_keywords on empty list should remain empty"
+    assert metadata.keywords == set(), "remove_keywords on empty list should remain empty"
