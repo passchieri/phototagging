@@ -2,11 +2,11 @@ from typing import Any, Mapping, Optional, TypedDict, cast
 import requests
 from pathlib import Path
 
-URL = "https://server.phototag.ai/api/keywords"    
+URL = "https://server.phototag.ai/api/keywords"
 TOKEN = "c9245585-facb-4737-b91f-b7a32ca098ad"
 
 
-PAYLOAD:dict[str,Any] = {
+PAYLOAD: dict[str, Any] = {
     "addMetadata": False,
     "keywordsOnly": False,
     "saveFile": False,
@@ -21,6 +21,7 @@ PAYLOAD:dict[str,Any] = {
     # "customContext": "big city",
 }
 
+
 class PhotoTagResponse(TypedDict):
     filename: str
     id: str
@@ -30,7 +31,7 @@ class PhotoTagResponse(TypedDict):
 
 
 class PhotoTag:
-    def __init__(self, url: str = URL, token: str = TOKEN, options: Optional[dict[str,Any]] = None):
+    def __init__(self, url: str = URL, token: str = TOKEN, options: Optional[dict[str, Any]] = None):
         self.url = url
         self.headers = {"Authorization": f"Bearer {token}"}
         self.payload = PAYLOAD.copy()
@@ -50,10 +51,10 @@ class PhotoTag:
             if not isinstance(raw_data, dict):
                 raise TypeError("Expected response data to be a mapping.")
 
-            data=cast(Mapping[str, Any], raw_data)
+            data = cast(Mapping[str, Any], raw_data)
             normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
             normalized_data["filename"] = path.name
             normalized_data["id"] = path.name
-            if not "keywords" in normalized_data :
+            if not "keywords" in normalized_data:
                 normalized_data["keywords"] = []
             return cast(PhotoTagResponse, normalized_data)

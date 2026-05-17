@@ -5,6 +5,7 @@ import re
 
 from .metadata_manager import MetadataManager
 
+
 class ImageFilter(Protocol):
     """Protocol for image filtering functions."""
 
@@ -25,11 +26,7 @@ def create_age_filter(max_days: int) -> ImageFilter:
 
     def filter_by_age(images: list[Path]) -> list[Path]:
         cutoff = datetime.now() - timedelta(days=max_days)
-        return [
-            image_path
-            for image_path in images
-            if datetime.fromtimestamp(image_path.stat().st_mtime) >= cutoff
-        ]
+        return [image_path for image_path in images if datetime.fromtimestamp(image_path.stat().st_mtime) >= cutoff]
 
     return filter_by_age
 
@@ -79,10 +76,6 @@ def create_db_filter(metadata_managaer: MetadataManager) -> ImageFilter:
 
     def filter_by_db(images: list[Path]) -> list[Path]:
         existing = {record.filename for record in metadata_managaer.all()}
-        return [
-            image_path
-            for image_path in images
-            if str(image_path) in existing or image_path.name in existing
-        ]
+        return [image_path for image_path in images if str(image_path) in existing or image_path.name in existing]
 
     return filter_by_db

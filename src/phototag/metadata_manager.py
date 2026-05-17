@@ -47,7 +47,9 @@ class MetadataManager:
 
         metadata = self.get_by_filename(filename)
         if not metadata or force:
-            metadata = self.create_for_file(filename, force,required_keywords=default_keywords, keywords_to_remove=keywords_to_remove)
+            metadata = self.create_for_file(
+                filename, force, required_keywords=default_keywords, keywords_to_remove=keywords_to_remove
+            )
             if not metadata:
                 raise ValueError(f"Could not create metadata for file '{filename}'.")
         else:

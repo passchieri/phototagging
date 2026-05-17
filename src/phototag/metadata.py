@@ -9,7 +9,7 @@ class MetaData:
 
     id: str
     filename: str
-    keywords: list[str]  = field(default_factory=list[str])
+    keywords: list[str] = field(default_factory=list[str])
     title: Optional[str] = None
     description: Optional[str] = None
 
@@ -41,11 +41,11 @@ class MetaData:
             return ""
         return " ".join(f"#{k.replace(' ', '')}" for k in sorted(set(self.keywords)))
 
-    def to_dict(self) -> dict[str,Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the MetaData instance to a dictionary."""
-        kw=[]
+        kw = []
         if self.keywords:
-            kw=sorted(set(self.keywords))
+            kw = sorted(set(self.keywords))
         return {
             "id": self.id,
             "filename": self.filename,

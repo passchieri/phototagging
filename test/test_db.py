@@ -1,8 +1,10 @@
+# type: ignore
+
 import pytest
 from phototag.db import Db
 
 
-def test_get_by_filename(tmp_path):
+def test_get_by_filename(tmp_path): 
     db = Db(tmp_path / "test_db.json")
 
     with db:
