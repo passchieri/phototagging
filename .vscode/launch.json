@@ -24,10 +24,10 @@
             "autoStartBrowser": false
         },
         {
-            "name": "Python Debugger: Main File with Arguments",
+            "name": "Python Debugger: Cli with Arguments",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "module": "phototag.cli",
             "console": "integratedTerminal",
             "args": "${command:pickArgs}"
         }

@@ -1,26 +1,27 @@
 
 [project]
-authors = [{name = "Igor Passchier", email = "igor.passchier@gmail.com"}] 
+authors = [{ name = "Igor Passchier", email = "igor.passchier@gmail.com" }]
 classifiers = [
   "License :: MIT ",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-] 
+]
 dependencies = [
-"requests",
-"tinydb",
-"python-dotenv",
-"Pillow",
-"matplotlib",
-"py3exiv2",
-"flask",
-"sortedcontainers",
-] 
-description = "Igors photo tagging library" 
-dynamic = ["version"] 
-license = {text = "MIT"} 
-name = "phototag" 
-requires-python = ">=3.14" 
+  "flask",
+  "matplotlib",
+  "Pillow",
+  "py3exiv2",
+  "pydantic~=2.13",
+  "python-dotenv",
+  "requests",
+  "sortedcontainers",
+  "tinydb",
+]
+description = "Igors photo tagging library"
+dynamic = ["version"]
+license = { text = "MIT" }
+name = "phototag"
+requires-python = ">=3.14"
 
 [project.urls]
 #"Bug Tracker" = "https://Z003KBKV@dev.azure.com/Z003KBKV/Simulytic/_git/psimclient"
@@ -52,31 +53,32 @@ phototag = ["py.typed"]
 dev = [
   "black~=26.0",
   "build~=1.0",
+  "isort~=8.0",
+  "jupyter~=1.1",
+  "nbqa~=1.9",
   "pytest_cov~=4.1",
   "pytest-mock~=3.14",
   "pytest~=7.2",
   "setuptools_scm[toml]~=8.0",
   "setuptools>=69",
+  "sortedcontainers-stubs",
   "tox~=4.0",
   "twine~=4.0",
   "types-requests~=2.32",
-  "nbqa~=1.9",
-  "isort~=8.0",
-  "jupyter~=1.1",
-  "sortedcontainers-stubs",
 ]
 
 testing = [
+  "jupyter~=1.1",
+  "nbqa~=1.9",
+  "pydantic~=2.13",
   "pytest_cov~=4.1",
   "pytest-mock~=3.14",
   "pytest~=7.2",
+  "sortedcontainers-stubs",
+  "tox~=4.0",
 ]
 
-linting = [
-  "black~=23.0",
-  "mypy~=1.13",
-  "types-requests~=2.32",
-]
+linting = ["black~=26.0", "sortedcontainers-stubs", "types-requests~=2.32"]
 
 [tool.pytest.ini_options]
 addopts = "--cov --cov-report=term-missing"
@@ -85,18 +87,15 @@ testpaths = ["test"]
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = [
-"*/__init__.py",
-"*/main.py",
-]
+omit = ["*/__init__.py", "*/main.py"]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ :",
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ :",
 ]
 show_missing = true
 fail_under = 0
@@ -107,6 +106,7 @@ line-length = 120
 [tool.mypy]
 exclude = 'venv|site-packages|.vscode|build|test'
 ignore_missing_imports = true
+plugins = ["tinydb.mypy_plugin"]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -132,5 +132,5 @@ legacy_tox_ini = """
     [testenv:mypy]
     extras = linting
     commands = mypy src
-
+    allowlist_externals = mypy
 """

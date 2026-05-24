@@ -1,13 +1,15 @@
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Optional
-from sortedcontainers import SortedSet 
+from typing import Any, Dict, Iterable, List, Optional, Self, Tuple
+from sortedcontainers import SortedSet
+
+from .db import DbMetadata
 
 
 @dataclass
 class MetaData:
     """Class representing metadata for a photo."""
 
-    id: str
+    id: int
     filename: str
     keywords: SortedSet[str] = field(default_factory=SortedSet[str])
     title: Optional[str] = None
@@ -24,18 +26,26 @@ class MetaData:
         for keyword in new_keywords:
             self.keywords.add(keyword.lower())
 
+    def replace_keywords(self, keywords: Iterable[str]):
+        """Replace all keywords with the provided list."""
+        self.keywords.clear()
+        for keyword in keywords:
+            self.keywords.add(keyword.lower())
+
     def remove_keywords(self, keywords_to_remove: Iterable[str]):
         """Remove specified keywords from the existing set of keywords."""
         for kw in keywords_to_remove:
             if kw.lower() in self.keywords:
                 self.keywords.remove(kw.lower())
 
+    @property
     def pexels(self) -> str:
         """Return keywords formatted for Pexels."""
         if not self.keywords:
             return ""
         return ", ".join(self.keywords)
 
+    @property
     def instagram(self) -> str:
         """Return keywords formatted for Instagram hashtags."""
         if not self.keywords:
@@ -44,13 +54,24 @@ class MetaData:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the MetaData instance to a dictionary."""
-        kw = []
-        if self.keywords:
-            kw = sorted(self.keywords)
         return {
             "id": self.id,
             "filename": self.filename,
-            "keywords": kw,
+            "keywords": list(self.keywords),
             "title": self.title,
             "description": self.description,
         }
+
+    def to_db_metadata(self) -> Tuple[int, DbMetadata]:
+        md = DbMetadata(**self.to_dict())
+        return (self.id, md)
+
+    @classmethod
+    def from_db_metadata(cls, id: int, data: DbMetadata) -> Self:
+        ret = cls(**data.model_dump(), id=id)
+        return ret
+
+    @classmethod
+    def from_db_metadata_dict(cls, data: Dict[int, DbMetadata]) -> List[Self]:
+        ret = [cls(id=k, **v.model_dump()) for k, v in data.items()]
+        return ret

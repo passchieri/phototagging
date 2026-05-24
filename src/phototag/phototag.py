@@ -49,12 +49,12 @@ class PhotoTag:
 
             raw_data = response.json()["data"]
             if not isinstance(raw_data, dict):
-                raise TypeError("Expected response data to be a mapping.")
+                raise TypeError("Expected response data to be a mapping.")  # pragma: no cover
 
             data = cast(Mapping[str, Any], raw_data)
             normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
             normalized_data["filename"] = path.name
             normalized_data["id"] = path.name
             if not "keywords" in normalized_data:
-                normalized_data["keywords"] = []
+                normalized_data["keywords"] = []  # pragma: no cover
             return cast(PhotoTagResponse, normalized_data)

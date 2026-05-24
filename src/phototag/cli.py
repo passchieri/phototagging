@@ -67,6 +67,14 @@ def _create_parser():
         default=DB_FILE,
         help="Database file name",
     )
+
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force getting new info",
+    )
+
     parser.add_argument(
         "image",
         nargs="*",
@@ -87,7 +95,7 @@ def _create_parser():
 def _process_fields(fields: Optional[list[str]]) -> list[str]:
     """Process the fields argument and handle special cases."""
     if not fields:
-        return []
+        fields = ["all"]
 
     if "shutterstock" in fields or "shutter" in fields:
         if len(fields) > 1:
@@ -124,10 +132,10 @@ def _print_result(result: MetaData | None, fields: list[str]) -> None:
                 print(attr)
         print("------------------------")
     elif fields and "shutter" in fields:
-        print(f'{result.filename},{result.title},"{result.pexels()}",,,no,')
+        print(f'{result.filename},{result.title},"{result.pexels}",,,no,')
     else:
         data = result.to_dict()
-        data.update({"pexels": result.pexels(), "instagram": result.instagram()})
+        data.update({"pexels": result.pexels, "instagram": result.instagram})
         print(
             json.dumps(
                 data,
@@ -159,7 +167,9 @@ def main():
             return 0
 
         for image in args.image:
-            result = meta.get_or_create(image, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove)
+            result = meta.get_or_create(
+                image, force=args.force, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove
+            )
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

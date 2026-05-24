@@ -6,7 +6,7 @@ import re
 from .metadata_manager import MetadataManager
 
 
-class ImageFilter(Protocol):
+class ImageFilter(Protocol):  # pragma: no cover
     """Protocol for image filtering functions."""
 
     def __call__(self, images: list[Path]) -> list[Path]:
