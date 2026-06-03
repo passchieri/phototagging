@@ -85,6 +85,14 @@ class MetadataManager:
                 raise ValueError(f"No record found with filename '{filename}'.")
             c.delete(data[0])
 
+    def delete_by_id(self, id: int) -> None:
+        """Delete a single record by id."""
+        with self.db as c:
+            data = c.get(id)
+            if not data:
+                raise ValueError(f"No record found with id '{id}'.")
+            c.delete(data[0])
+
     def create(
         self,
         filename: str,
