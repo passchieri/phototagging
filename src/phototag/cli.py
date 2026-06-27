@@ -1,5 +1,7 @@
 import argparse
 from typing import Optional
+
+from .exif import ExifManager
 from .db import Db
 from .metadata_manager import MetadataManager
 from .metadata import MetaData
@@ -66,6 +68,12 @@ def _create_parser():
         "--db",
         default=DB_FILE,
         help="Database file name",
+    )
+    parser.add_argument(
+        "-e",
+        "--exif",
+        default="none",
+        help="Read or write metadata",
     )
 
     parser.add_argument(
@@ -170,6 +178,11 @@ def main():
             result = meta.get_or_create(
                 image, force=args.force, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove
             )
+            if result and args.exif=="read":
+                with ExifManager(image) as exif:
+                    exif.add_location_info_to_keywords()
+                    exif_keys=exif.keywords
+                meta.update_keywords(result,keywords_to_add=exif_keys)
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

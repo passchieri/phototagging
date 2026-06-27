@@ -29,6 +29,7 @@ requires-python = ">=3.14"
 
 [project.scripts]
 phototag = "phototag.cli:main"
+exif = "phototag.exif:main"
 
 [build-system]
 build-backend = "setuptools.build_meta"
