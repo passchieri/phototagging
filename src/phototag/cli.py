@@ -82,6 +82,13 @@ def _create_parser():
         action="store_true",
         help="Force getting new info",
     )
+    parser.add_argument(
+        "-x",
+        "--delete",
+        action="store_true",
+        help="Delete an entry",
+    )
+
 
     parser.add_argument(
         "image",
@@ -116,6 +123,7 @@ def _process_fields(fields: Optional[list[str]]) -> list[str]:
             raise ValueError("The 'all' field cannot be used with other fields.")
         return [
             "filename",
+            "full_path",
             "title",
             "pexels",
             "instagram",
@@ -169,11 +177,23 @@ def main():
         fields = _process_fields(args.print)
 
         if args.all:
+            if args.delete:
+                raise ValueError("Refusing to delete all entries")
             records = meta.all()
             for record in records:
                 _print_result(record, fields)
             return 0
 
+        if args.delete:
+            for image in args.image:
+                result=meta.get_by_filename(image)
+                if result:
+                    meta.delete_by_id(result.id)
+                    print(f"Deleted record for file {image}")
+                else:
+                    raise ValueError(f"Cannot find record for image {image}")
+            return 0
+    
         for image in args.image:
             result = meta.get_or_create(
                 image, force=args.force, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove

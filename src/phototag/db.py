@@ -11,6 +11,7 @@ from tinydb.table import Document
 #     doc_id: int
 class DbMetadata(BaseModel):
     filename: str = Field(..., min_length=1)
+    full_path:str=Field(default="")
     keywords: List[str] = Field(default_factory=list)
     description: str = ""
     title: str = ""

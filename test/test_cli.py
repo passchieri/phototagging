@@ -12,6 +12,7 @@ from phototag.metadata import MetaData
 def all_fields():
     return [
         "filename",
+        "full_path",
         "title",
         "pexels",
         "instagram",
@@ -72,7 +73,9 @@ class TestCreateParser:
     def test_parser_with_tags_and_remove_tags(self):
         """Test parser with both tags and remove-tags arguments."""
         parser = _create_parser()
-        args = parser.parse_args(["-t", "add1,add2", "-r", "remove1,remove2", "image.jpg"])
+        args = parser.parse_args(
+            ["-t", "add1,add2", "-r", "remove1,remove2", "image.jpg"]
+        )
         assert args.tags == ["add1", "add2"]
         assert args.remove_tags == ["remove1", "remove2"]
 
@@ -122,7 +125,9 @@ class TestProcessFields:
 
     def test_process_fields_all_with_other_raises_error(self):
         """Test that 'all' with other fields raises an error."""
-        with pytest.raises(ValueError, match="'all' field cannot be used with other fields"):
+        with pytest.raises(
+            ValueError, match="'all' field cannot be used with other fields"
+        ):
             _process_fields(["all", "title"])
 
     def test_process_fields_shutterstock(self):
@@ -137,7 +142,9 @@ class TestProcessFields:
 
     def test_process_fields_shutterstock_with_other_raises_error(self):
         """Test that 'shutterstock' with other fields raises an error."""
-        with pytest.raises(ValueError, match="'shutterstock' field cannot be used with other fields"):
+        with pytest.raises(
+            ValueError, match="'shutterstock' field cannot be used with other fields"
+        ):
             _process_fields(["shutterstock", "title"])
 
     def test_process_fields_normal(self):
@@ -254,6 +261,7 @@ class TestMain:
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = ["tag1"]
@@ -264,7 +272,9 @@ class TestMain:
             result = main()
             assert result == 0
             mock_db.assert_called_once_with("/path/to/db.json")
-            mock_phototag.assert_called_once_with(url="https://api.test.com", token="valid_token")
+            mock_phototag.assert_called_once_with(
+                url="https://api.test.com", token="valid_token"
+            )
 
     @patch("phototag.cli.MetadataManager")
     @patch("phototag.cli.Db")
@@ -273,6 +283,7 @@ class TestMain:
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = ["tag1"]
@@ -280,11 +291,11 @@ class TestMain:
             mock_args.print = []
             mock_args.all = True
             mock_parser.return_value.parse_args.return_value = mock_args
-            mock_meta.return_value.all.return_value=[1,2,3]
+            mock_meta.return_value.all.return_value = [1, 2, 3]
 
             with patch("phototag.cli._print_result") as mock_print:
                 main()
-                assert mock_print.call_count ==3
+                assert mock_print.call_count == 3
 
     @patch("phototag.cli.MetadataManager")
     def test_main_with_images(self, mock_meta: Mock):
@@ -292,6 +303,7 @@ class TestMain:
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = []
@@ -322,6 +334,7 @@ class TestMain:
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = []
@@ -355,6 +368,7 @@ class TestMain:
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = ["add1", "add2"]
@@ -384,11 +398,14 @@ class TestMain:
             assert call_kwargs["keywords_to_remove"] == ["remove1", "remove2"]
 
     @patch("phototag.cli.Db")
-    def test_main_exception_handling(self, mock_db: Mock, capsys: pytest.CaptureFixture[str]):
+    def test_main_exception_handling(
+        self, mock_db: Mock, capsys: pytest.CaptureFixture[str]
+    ):
         """Test main function exception handling."""
         with patch("phototag.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
+            mock_args.delete = False
             mock_args.url = "https://api.test.com"
             mock_args.db = "/path/to/db.json"
             mock_args.tags = []

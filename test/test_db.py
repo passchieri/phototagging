@@ -10,6 +10,7 @@ from pydantic import ValidationError
 def test_data_1() -> DbMetadata:
     return DbMetadata(
         filename="test_image_1.jpg",
+        full_path="/dummy/path/to/file/test_image_1.jpg",
         keywords=["test", "image1"],
         description="A test image",
         title="Test Image 1",
@@ -20,6 +21,7 @@ def test_data_1() -> DbMetadata:
 def test_data_2() -> DbMetadata:
     return DbMetadata(
         filename="test_image_2.jpg",
+        full_path="/dummy/path/to/file/test_image_2.jpg",
         keywords=["test", "image2"],
         description="Another test image",
         title="Test Image 2",
