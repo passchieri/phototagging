@@ -1,7 +1,7 @@
 
 from collections import Counter
 from unittest.mock import MagicMock
-from phototag.update_image import CITY_KEY, COUNTRY_KEY, KEYWORD_KEYS, add_keywords_to_metadata, remove_all_keywords_from_exif
+from phototagging.update_image import CITY_KEY, COUNTRY_KEY, KEYWORD_KEYS, add_keywords_to_metadata, remove_all_keywords_from_exif
 
 
 def test_add_keywords_to_metadata():

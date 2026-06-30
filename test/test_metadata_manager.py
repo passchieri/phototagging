@@ -5,10 +5,10 @@ import pytest
 from unittest.mock import MagicMock
 
 from sortedcontainers import SortedSet
-from phototag.db import Db, DbMetadata
-from phototag.metadata_manager import ExternalServiceError, MetadataManager
-from phototag.metadata import MetaData
-from phototag.phototag import PhotoTag, PhotoTagResponse
+from phototagging.db import Db, DbMetadata
+from phototagging.metadata_manager import ExternalServiceError, MetadataManager
+from phototagging.metadata import MetaData
+from phototagging.phototag import PhotoTag, PhotoTagResponse
 
 
 def create_mock_db_return_value(
@@ -44,7 +44,7 @@ def mock_db(sample_db_data: Tuple[int, DbMetadata]) -> Db:
 
 @pytest.fixture
 def mock_phototag(sample_phototag_response: PhotoTagResponse) -> PhotoTag:
-    """Create a mock PhotoTag API."""
+    """Create a mock phototagging API."""
     mock = MagicMock()
     mock.fetch_for_file.return_value = sample_phototag_response
     return mock

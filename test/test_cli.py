@@ -4,8 +4,8 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 
 from sortedcontainers import SortedSet
-from phototag.cli import _create_parser, _process_fields, _print_result, main  # type: ignore
-from phototag.metadata import MetaData
+from phototagging.cli import _create_parser, _process_fields, _print_result, main  # type: ignore
+from phototagging.metadata import MetaData
 
 
 @pytest.fixture
@@ -242,7 +242,7 @@ class TestMain:
 
     def test_main_no_token(self, capsys: pytest.CaptureFixture[str]):
         """Test main function with no token."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = ""
             mock_args.image = []
@@ -254,11 +254,11 @@ class TestMain:
             captured = capsys.readouterr()
             assert "API token is required" in captured.out
 
-    @patch("phototag.cli.Db")
-    @patch("phototag.cli.PhotoTag")
+    @patch("phototagging.cli.Db")
+    @patch("phototagging.cli.PhotoTag")
     def test_main_with_valid_args(self, mock_phototag: Mock, mock_db: Mock):
         """Test main function with valid arguments."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False
@@ -276,11 +276,11 @@ class TestMain:
                 url="https://api.test.com", token="valid_token"
             )
 
-    @patch("phototag.cli.MetadataManager")
-    @patch("phototag.cli.Db")
+    @patch("phototagging.cli.MetadataManager")
+    @patch("phototagging.cli.Db")
     def test_main_with_arg_all(self, mock_db: Mock, mock_meta: Mock):
         """Test main function with valid arguments."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False
@@ -293,14 +293,14 @@ class TestMain:
             mock_parser.return_value.parse_args.return_value = mock_args
             mock_meta.return_value.all.return_value = [1, 2, 3]
 
-            with patch("phototag.cli._print_result") as mock_print:
+            with patch("phototagging.cli._print_result") as mock_print:
                 main()
                 assert mock_print.call_count == 3
 
-    @patch("phototag.cli.MetadataManager")
+    @patch("phototagging.cli.MetadataManager")
     def test_main_with_images(self, mock_meta: Mock):
         """Test main function processing images."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False
@@ -323,15 +323,15 @@ class TestMain:
 
             mock_parser.return_value.parse_args.return_value = mock_args
 
-            with patch("phototag.cli._print_result"):
+            with patch("phototagging.cli._print_result"):
                 result = main()
             assert result == 0
             assert mock_meta_instance.get_or_create.call_count == 2
 
-    @patch("phototag.cli.MetadataManager")
+    @patch("phototagging.cli.MetadataManager")
     def test_main_with_remove_tags(self, mock_meta: Mock):
         """Test main function with remove-tags argument."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False
@@ -354,7 +354,7 @@ class TestMain:
 
             mock_parser.return_value.parse_args.return_value = mock_args
 
-            with patch("phototag.cli._print_result"):
+            with patch("phototagging.cli._print_result"):
                 result = main()
             assert result == 0
             # Verify get_or_create was called with remove_tags
@@ -362,10 +362,10 @@ class TestMain:
             call_kwargs = mock_meta_instance.get_or_create.call_args[1]
             assert call_kwargs["keywords_to_remove"] == ["tag1", "tag2"]
 
-    @patch("phototag.cli.MetadataManager")
+    @patch("phototagging.cli.MetadataManager")
     def test_main_with_tags_and_remove_tags(self, mock_meta: Mock):
         """Test main function with both tags and remove-tags arguments."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False
@@ -388,7 +388,7 @@ class TestMain:
 
             mock_parser.return_value.parse_args.return_value = mock_args
 
-            with patch("phototag.cli._print_result"):
+            with patch("phototagging.cli._print_result"):
                 result = main()
             assert result == 0
             # Verify get_or_create was called with both default_tags and removed_tags
@@ -397,12 +397,12 @@ class TestMain:
             assert call_kwargs["default_keywords"] == ["add1", "add2"]
             assert call_kwargs["keywords_to_remove"] == ["remove1", "remove2"]
 
-    @patch("phototag.cli.Db")
+    @patch("phototagging.cli.Db")
     def test_main_exception_handling(
         self, mock_db: Mock, capsys: pytest.CaptureFixture[str]
     ):
         """Test main function exception handling."""
-        with patch("phototag.cli._create_parser") as mock_parser:
+        with patch("phototagging.cli._create_parser") as mock_parser:
             mock_args = MagicMock()
             mock_args.token = "valid_token"
             mock_args.delete = False

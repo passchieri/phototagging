@@ -12,10 +12,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from phototag.db import Db as PhototagDb
-from phototag.metadata import MetaData
-from phototag.metadata_manager import MetadataManager
-from phototag.phototag import PhotoTag
+from phototagging.db import Db as PhototagDb
+from phototagging.metadata import MetaData
+from phototagging.metadata_manager import MetadataManager
+from phototagging.phototag import PhotoTag
 
 
 @asynccontextmanager

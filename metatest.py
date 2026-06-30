@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from pyexiv2 import ImageMetadata
-from phototag.update_image import KEYWORD_KEYS, add_keywords_to_metadata, read_exif, remove_all_keywords_from_exif, write_exif
+from pyexiv2 import ImageMetadata # type: ignore
+from phototagging.update_image import KEYWORD_KEYS, add_keywords_to_metadata, read_exif, remove_all_keywords_from_exif, write_exif
 
 def print_tags(metadata:ImageMetadata):
     for key in KEYWORD_KEYS:

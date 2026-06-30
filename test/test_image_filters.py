@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from phototag.filters import (
+from phototagging.filters import (
     create_age_filter,
     create_max_files_filter,
     create_regexp_filter,
