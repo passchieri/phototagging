@@ -41,6 +41,7 @@ test: lint
 
 lint: $(SRCS)
 	uv run ruff check src
+	uv run mypy src
 
 backend: test
 	uv run uvicorn --reload --port 8000 server.api:app

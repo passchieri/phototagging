@@ -113,8 +113,12 @@ def _process_fields(fields: Optional[list[str]]) -> list[str]:
 
     if "shutterstock" in fields or "shutter" in fields:
         if len(fields) > 1:
-            raise ValueError("The 'shutterstock' field cannot be used with other fields.")
-        print("Filename,Description,Keywords,Categories,Editorial,Mature content,illustration")
+            raise ValueError(
+                "The 'shutterstock' field cannot be used with other fields."
+            )
+        print(
+            "Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"
+        )
         return ["shutter"]
 
     if "all" in fields:
@@ -166,7 +170,9 @@ def main():
     keywords_to_remove = args.remove_tags if args.remove_tags else None
     try:
         if not args.token:
-            raise ValueError("API token is required. Set it with --token or in $HOME/.phototag.env")
+            raise ValueError(
+                "API token is required. Set it with --token or in $HOME/.phototag.env"
+            )
         db = Db(args.db)
         phototag = PhotoTag(
             url=args.url,
@@ -195,7 +201,10 @@ def main():
 
         for image in args.image:
             result = meta.get_or_create(
-                image, force=args.force, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove
+                image,
+                force=args.force,
+                default_keywords=default_keywords,
+                keywords_to_remove=keywords_to_remove,
             )
             if result and args.exif == "read":
                 with ExifManager(image) as exif:
