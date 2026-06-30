@@ -1,6 +1,7 @@
-from typing import Any, Mapping, Optional, TypedDict, cast
-import requests
 from pathlib import Path
+from typing import Any, Mapping, Optional, TypedDict, cast
+
+import requests
 
 URL = "https://server.phototag.ai/api/keywords"
 TOKEN = "c9245585-facb-4737-b91f-b7a32ca098ad"
@@ -55,6 +56,6 @@ class PhotoTag:
             normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
             normalized_data["filename"] = path.name
             normalized_data["id"] = path.name
-            if not "keywords" in normalized_data:
+            if "keywords" not in normalized_data:
                 normalized_data["keywords"] = []  # pragma: no cover
             return cast(PhotoTagResponse, normalized_data)

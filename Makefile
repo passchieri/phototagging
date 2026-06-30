@@ -28,13 +28,16 @@ bindir=$(exec_prefix)/bin
 all: $(WHEEL)
 
 $(WHEEL) $(SRCS_TAR): $(SRCS)
-	pytest -v --cov=src --cov-report=xml test
-	python -m build
+	poetry run pytest -v --cov=src --cov-report=xml test
+	poetry build
 	# Reinstall, because version numbers could have changed
 	pip install -e .[dev]
 
 test: srcs
-	tox -p
+	poetry run tox -p
+
+backend: test
+	poetry run uvicorn --reload --port 8000 server.api:app
 
 publish: publish_bin publish_docs
 
@@ -47,8 +50,10 @@ publish_docs: $(DOCS)
 init:
 	[ -d src ] || mkdir src
 	[ -d test ] || mkdir test
-	pip install --upgrade pip
-	pip install -e .[dev]
+	poetry --version || (echo "Please install poetry first " && false)
+	poetry config virtualenvs.in-project true
+	poetry env use python3.14
+	poetry install --all-groups
 
 clean:
 	find . -name site-packages -prune -o -name __pycache__  -o -name '*.egg-info' -exec rm -Rf '{}' \+

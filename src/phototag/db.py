@@ -1,6 +1,7 @@
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Tuple, TypeAlias, TypeVar
+
 from pydantic import BaseModel, Field, field_validator
 from tinydb import Query, TinyDB
 from tinydb.table import Document
@@ -11,7 +12,7 @@ from tinydb.table import Document
 #     doc_id: int
 class DbMetadata(BaseModel):
     filename: str = Field(..., min_length=1)
-    full_path:str=Field(default="")
+    full_path: str = Field(default="")
     keywords: List[str] = Field(default_factory=list)
     description: str = ""
     title: str = ""
@@ -87,7 +88,7 @@ class Db:
         doc = self._db.get(doc_id=id)  # pyright: ignore[reportUnknownMemberType]
         if doc is None:
             raise ValueError(f"No document found with id '{id}'.")
-        assert type(doc) == Document
+        assert isinstance(doc, Document)
         data = DbMetadata(**doc)  # type: ignore
         return (id, data)
 

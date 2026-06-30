@@ -1,10 +1,9 @@
+from collections.abc import MutableMapping
 from pathlib import Path
 from types import TracebackType
+from typing import Any, Set, TypeVar
 
 from pyexiv2 import ImageMetadata  # type: ignore
-
-from typing import Any, Set, TypeVar
-from collections.abc import MutableMapping
 
 T = TypeVar("T", bound=MutableMapping[str, Any])
 

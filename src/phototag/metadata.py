@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Self, Tuple
+
 from sortedcontainers import SortedSet
 
 from .db import DbMetadata
@@ -12,7 +13,7 @@ class MetaData:
 
     id: int
     filename: str
-    full_path:str=""
+    full_path: str = ""
     keywords: SortedSet[str] = field(default_factory=SortedSet[str])
     title: Optional[str] = None
     description: Optional[str] = None
@@ -40,12 +41,12 @@ class MetaData:
             if kw.lower() in self.keywords:
                 self.keywords.remove(kw.lower())
 
-    def create_full_path(self, dir:str="/Users/igor/Pictures/Lightroom Saved Photos/")->bool:
-        if self.full_path=="":
-            d=Path(dir)
-            path=d / self.filename
+    def create_full_path(self, dir: str = "/Users/igor/Pictures/Lightroom Saved Photos/") -> bool:
+        if self.full_path == "":
+            d = Path(dir)
+            path = d / self.filename
             if path.exists():
-                self.full_path=str(path.resolve())
+                self.full_path = str(path.resolve())
                 return True
         return False
 
@@ -68,7 +69,7 @@ class MetaData:
         return {
             "id": self.id,
             "filename": self.filename,
-            "full_path":self.full_path,
+            "full_path": self.full_path,
             "keywords": list(self.keywords),
             "title": self.title,
             "description": self.description,

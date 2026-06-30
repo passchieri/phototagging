@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 from pyexiv2 import ImageMetadata
 from phototag.update_image import KEYWORD_KEYS, add_keywords_to_metadata, read_exif, remove_all_keywords_from_exif, write_exif

@@ -1,16 +1,16 @@
 import argparse
-from typing import Optional
-
-from .exif import ExifManager
-from .db import Db
-from .metadata_manager import MetadataManager
-from .metadata import MetaData
-from .phototag import PhotoTag
 import json
-
 import os
 from pathlib import Path
+from typing import Optional
+
 from dotenv import load_dotenv
+
+from .db import Db
+from .exif import ExifManager
+from .metadata import MetaData
+from .metadata_manager import MetadataManager
+from .phototag import PhotoTag
 
 # Load .phototag.env from home directory
 load_dotenv(dotenv_path=Path.home() / ".phototag.env")
@@ -88,7 +88,6 @@ def _create_parser():
         action="store_true",
         help="Delete an entry",
     )
-
 
     parser.add_argument(
         "image",
@@ -186,23 +185,23 @@ def main():
 
         if args.delete:
             for image in args.image:
-                result=meta.get_by_filename(image)
+                result = meta.get_by_filename(image)
                 if result:
                     meta.delete_by_id(result.id)
                     print(f"Deleted record for file {image}")
                 else:
                     raise ValueError(f"Cannot find record for image {image}")
             return 0
-    
+
         for image in args.image:
             result = meta.get_or_create(
                 image, force=args.force, default_keywords=default_keywords, keywords_to_remove=keywords_to_remove
             )
-            if result and args.exif=="read":
+            if result and args.exif == "read":
                 with ExifManager(image) as exif:
                     exif.add_location_info_to_keywords()
-                    exif_keys=exif.keywords
-                meta.update_keywords(result,keywords_to_add=exif_keys)
+                    exif_keys = exif.keywords
+                meta.update_keywords(result, keywords_to_add=exif_keys)
             _print_result(result, fields)
     except Exception as e:
         print(f"Error: {e}")

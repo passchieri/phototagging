@@ -1,9 +1,8 @@
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
-
-from .metadata import MetaData
 from .db import Db, DbMetadata
+from .metadata import MetaData
 from .phototag import PhotoTag
 
 
@@ -117,9 +116,7 @@ class MetadataManager:
     ) -> MetaData:
         """Create metadata for a file using PhotoTag."""
         if self.get_by_filename(filename):
-            raise ValueError(
-                f"Metadata for file '{filename}' already exists in the database."
-            )
+            raise ValueError(f"Metadata for file '{filename}' already exists in the database.")
         data = self.phototag.fetch_for_file(filename)
         if not data:
             raise ExternalServiceError("Phototag api did not return any value")
@@ -149,9 +146,7 @@ class MetadataManager:
     ) -> MetaData:
         """Update keywords in metadata."""
         if keywords and (keywords_to_add or keywords_to_remove):
-            raise ValueError(
-                "Setting keywords and also keywords_to_add or keywords_to_remove is not allowed"
-            )
+            raise ValueError("Setting keywords and also keywords_to_add or keywords_to_remove is not allowed")
         if keywords:
             metadata.replace_keywords(keywords)
         if keywords_to_add:
@@ -170,9 +165,7 @@ class MetadataManager:
         metadata = self.get_by_filename(filename)
         if not metadata:
             raise ValueError(f"No metadata found for file {filename}")
-        return self.update_keywords(
-            metadata, keywords, keywords_to_add, keywords_to_remove
-        )
+        return self.update_keywords(metadata, keywords, keywords_to_add, keywords_to_remove)
 
     def _create_db_record(
         self,

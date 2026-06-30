@@ -1,7 +1,7 @@
-from pyexiv2 import ImageMetadata  # type: ignore
-
-from typing import Any, TypeVar
 from collections.abc import MutableMapping
+from typing import Any, TypeVar
+
+from pyexiv2 import ImageMetadata  # type: ignore
 
 T = TypeVar("T", bound=MutableMapping[str, Any])
 
