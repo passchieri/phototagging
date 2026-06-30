@@ -4,7 +4,7 @@ from typing import Any, Dict
 import pytest
 from sortedcontainers import SortedSet
 
-from phototag.metadata import MetaData
+from phototagging.metadata import MetaData
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 import json
-from phototag.db import Db
+from phototagging.db import Db
 
 
 def read_results_blocks(filepath):

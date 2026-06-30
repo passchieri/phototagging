@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from phototag.db import Db, DbMetadata, DbMetadataPatch
+from phototagging.db import Db, DbMetadata, DbMetadataPatch
 from pydantic import ValidationError
 
 

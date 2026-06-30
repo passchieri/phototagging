@@ -1,9 +1,9 @@
 
 .PHONY: all init test srcs clean docs publish publish_bin publish_docs lint docker docker_image publish_image install uninstall
 
-PACKAGE_NAME        := $(shell project_info name)
-PROJECT_SCRIPTS     := $(shell project_info scripts)
-VERSION             := $(shell project_info version)
+PACKAGE_NAME        := $(shell uv run project_info name)
+PROJECT_SCRIPTS     := $(shell uv run project_info scripts)
+VERSION             := $(shell uv run project_info version)
 NORMALIZED_VERSION  := $(shell echo $(VERSION) | sed -e 's/+/_/g')
 
 SRCS           =$(wildcard src/*.py) $(wildcard src/*/*.py) $(wildcard src/*/*/*.py) $(wildcard src/*/*/*/*.py)
@@ -27,38 +27,32 @@ bindir=$(exec_prefix)/bin
 
 all: $(WHEEL)
 
-$(WHEEL) $(SRCS_TAR): $(SRCS)
-	poetry run pytest -v --cov=src --cov-report=xml test
-	poetry build
-	# Reinstall, because version numbers could have changed
-	pip install -e .[dev]
+build: lint test
+	uv build
 
-test: srcs
-	poetry run tox -p
+$(WHEEL) $(SRCS_TAR): $(SRCS)
+	uv run pytest -v --cov=src --cov-report=xml test
+	uv build
+	# Reinstall, because version numbers could have changed
+	uv sync
+
+test: lint
+	uv run pytest -v --cov=src --cov-report=xml test
+
+lint: $(SRCS)
+	uv run ruff check src
+	uv run mypy src
 
 backend: test
-	poetry run uvicorn --reload --port 8000 server.api:app
-
-publish: publish_bin publish_docs
-
-publish_bin: $(WHEEL) $(SRCS_TAR)
-	python -m twine upload $?
-
-publish_docs: $(DOCS)
-	wiki page upload "/Development/Tooling/Python based tooling/${PACKAGE_NAME}" "dist/doc/usage.md" --create_parents
+	uv run uvicorn --reload --port 8000 server.api:app
 
 init:
-	[ -d src ] || mkdir src
-	[ -d test ] || mkdir test
-	poetry --version || (echo "Please install poetry first " && false)
-	poetry config virtualenvs.in-project true
-	poetry env use python3.14
-	poetry install --all-groups
+	uv init --package
 
 clean:
 	find . -name site-packages -prune -o -name __pycache__  -o -name '*.egg-info' -exec rm -Rf '{}' \+
 	rm -Rf dist build coverage.xml .coverage .pytest_cache docker/*.whl
-	jupyter nbconvert --clear-output --inplace $(NOTEBOOKS) || true
+	uv run jupyter nbconvert --clear-output --inplace $(NOTEBOOKS) || true
 
 docker: publish_image
 
@@ -82,8 +76,6 @@ publish_image: docker_image
 
 install: $(WHEEL)
 	pipx install --force $(WHEEL)
-
-srcs: $(SRCS) 
 
 docs: $(DOCS)
 

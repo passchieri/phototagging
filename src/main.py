@@ -1,4 +1,4 @@
-from phototag.cli import main
+from phototagging.cli import main
 
 # import os
 # from pathlib import Path
