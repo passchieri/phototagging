@@ -1,5 +1,5 @@
 import { Heading, Flex, Stack } from "@chakra-ui/react";
-import { ImageSelector } from "./ImageSelector";
+import { MetadataSelector } from "./MetadataSelector";
 import Pagination from "./Pagination";
 
 const Header = () => {

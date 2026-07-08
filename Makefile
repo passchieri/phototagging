@@ -30,18 +30,18 @@ all: $(WHEEL)
 build: lint test
 	uv build
 
-$(WHEEL) $(SRCS_TAR): $(SRCS)
-	uv run pytest -v --cov=src --cov-report=xml test
+$(WHEEL) $(SRCS_TAR): $(SRCS) test
 	uv build
-	# Reinstall, because version numbers could have changed
-	uv sync
 
-test: lint
+test:
 	uv run pytest -v --cov=src --cov-report=xml test
 
 lint: $(SRCS)
-	uv run ruff check src
-	uv run mypy src
+	uv run ruff check --fix .
+	uv run ruff format .
+	uv run mypy .
+
+run: backend
 
 backend: test
 	uv run uvicorn --reload --port 8000 server.api:app
@@ -52,7 +52,7 @@ init:
 clean:
 	find . -name site-packages -prune -o -name __pycache__  -o -name '*.egg-info' -exec rm -Rf '{}' \+
 	rm -Rf dist build coverage.xml .coverage .pytest_cache docker/*.whl
-	uv run jupyter nbconvert --clear-output --inplace $(NOTEBOOKS) || true
+# 	uv run jupyter nbconvert --clear-output --inplace $(NOTEBOOKS) || true
 
 docker: publish_image
 

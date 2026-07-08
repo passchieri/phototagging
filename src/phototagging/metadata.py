@@ -1,26 +1,37 @@
-from dataclasses import dataclass, field
+import uuid
+from datetime import datetime
+from functools import total_ordering
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Self, Tuple
+from typing import Any, Dict, Iterable, Set, TypeAlias
 
-from sortedcontainers import SortedSet
+from pydantic import BaseModel, Field
 
-from .db import DbMetadata
+MetadataMap: TypeAlias = Dict[int, "Metadata"]
 
 
-@dataclass
-class MetaData:
-    """Class representing metadata for a photo."""
+# class MetadataFilled(BaseModel):
+#     id: str
+#     filename: str
+#     full_path: Path
+#     create_date: datetime
+#     keywords: Set[str]
+#     description: str
+#     title: str
 
-    id: int
+
+@total_ordering
+class Metadata(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     filename: str
-    full_path: str = ""
-    keywords: SortedSet[str] = field(default_factory=SortedSet[str])
-    title: Optional[str] = None
-    description: Optional[str] = None
+    full_path: Path
+    create_date: datetime
+    keywords: Set[str]
+    description: str
+    title: str
 
-    def __post_init__(self):
-        """Normalize keywords to lowercase and ensure they are stored as a set."""
-        self.keywords = SortedSet(str(kw).lower() for kw in self.keywords)
+    def model_post_init(self, __context: Any):
+        # Ensure keywords are stored in lowercase
+        self.keywords = set(kw.lower() for kw in self.keywords)
 
     def append_keywords(self, new_keywords: Iterable[str]):
         """Append new keywords to the existing set of keywords."""
@@ -41,15 +52,6 @@ class MetaData:
             if kw.lower() in self.keywords:
                 self.keywords.remove(kw.lower())
 
-    def create_full_path(self, dir: str = "/Users/igor/Pictures/Lightroom Saved Photos/") -> bool:
-        if self.full_path == "":
-            d = Path(dir)
-            path = d / self.filename
-            if path.exists():
-                self.full_path = str(path.resolve())
-                return True
-        return False
-
     @property
     def pexels(self) -> str:
         """Return keywords formatted for Pexels."""
@@ -64,27 +66,15 @@ class MetaData:
             return ""
         return " ".join(f"#{k.replace(' ', '')}" for k in self.keywords)
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the MetaData instance to a dictionary."""
-        return {
-            "id": self.id,
-            "filename": self.filename,
-            "full_path": self.full_path,
-            "keywords": list(self.keywords),
-            "title": self.title,
-            "description": self.description,
-        }
+    def __lt__(self, other: Any):
+        if not isinstance(other, Metadata):
+            return NotImplemented
+        return self.create_date < other.create_date
 
-    def to_db_metadata(self) -> Tuple[int, DbMetadata]:
-        md = DbMetadata(**self.to_dict())
-        return (self.id, md)
+    def __eq__(self, other: Any):
+        if not isinstance(other, Metadata):
+            return NotImplemented
+        return self.id == other.id
 
-    @classmethod
-    def from_db_metadata(cls, id: int, data: DbMetadata) -> Self:
-        ret = cls(**data.model_dump(), id=id)
-        return ret
-
-    @classmethod
-    def from_db_metadata_dict(cls, data: Dict[int, DbMetadata]) -> List[Self]:
-        ret = [cls(id=k, **v.model_dump()) for k, v in data.items()]
-        return ret
+    def to_metadata_filled(self) -> Metadata:
+        return self

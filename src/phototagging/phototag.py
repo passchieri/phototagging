@@ -39,11 +39,13 @@ class PhotoTag:
         if options:
             self.payload.update(options)
 
-    def fetch_for_file(self, filename: str) -> PhotoTagResponse:
-        path = Path(filename)
-        if not path.is_file():
+    def fetch_for_file(self, filename: Path | str) -> PhotoTagResponse:
+        if isinstance(filename, str):
+            filename = Path(filename)
+        filename.resolve()
+        if not filename.is_file():
             raise FileNotFoundError(f"File {filename} does not exist.")
-        with open(path, "rb") as file:
+        with open(filename, "rb") as file:
             response = requests.post(self.url, headers=self.headers, data=self.payload, files={"file": file})
             if not response.ok:
                 response.raise_for_status()
@@ -54,8 +56,8 @@ class PhotoTag:
 
             data = cast(Mapping[str, Any], raw_data)
             normalized_data: dict[str, Any] = {str(key): value for key, value in data.items()}
-            normalized_data["filename"] = path.name
-            normalized_data["id"] = path.name
+            normalized_data["filename"] = filename.name
+            normalized_data["id"] = filename.name
             if "keywords" not in normalized_data:
                 normalized_data["keywords"] = []  # pragma: no cover
             return cast(PhotoTagResponse, normalized_data)

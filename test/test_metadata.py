@@ -1,17 +1,21 @@
+import datetime
+import uuid
 from collections import Counter
 from typing import Any, Dict
 
 import pytest
-from sortedcontainers import SortedSet
+from pydantic import ValidationError
 
-from phototagging.metadata import MetaData
+from phototagging.metadata import Metadata
 
 
 @pytest.fixture
 def base_data() -> Dict[str, Any]:
     return {
-        "id": 99,
+        "id": str(uuid.uuid4()),
         "filename": "filename.jpg",
+        "full_path": "/just/a/dummy/path/filename.jpg",
+        "create_date": datetime.datetime.now().isoformat(),
         "keywords": ["test", "data1", "Capital", "duplicate", "duplicate"],
         "title": "The title",
         "description": "A longer description",
@@ -19,43 +23,38 @@ def base_data() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def sample(base_data: Dict[str, Any]) -> MetaData:
-    return MetaData(**base_data)
+def metadata(base_data: Dict[str, Any]) -> Metadata:
+    return Metadata(**base_data)
 
 
 def test_missing_required_fields(base_data: Dict[str, Any]):
-    """Test that MetaData raises an error for invalid data."""
+    """Test that Metadata raises an error for invalid data."""
 
-    is_base_data_valid = MetaData(**base_data)
-    assert is_base_data_valid is not None
+    assert Metadata(**base_data) is not None
 
-    for kw in ("filename", "id"):
-        dup = base_data.copy()
-        dup.pop(kw)
-        with pytest.raises(TypeError):
-            _ = MetaData(**dup)
-            assert False, f"It should not be allowed that {kw} is missing"
+    dup = base_data.copy()
+    dup.pop("filename")
+    with pytest.raises(ValidationError):
+        _ = Metadata(**dup)
+        assert False, "It should not be allowed that filename is missing"
 
 
 def test_missing_non_required_fields(base_data: Dict[str, Any]):
-    """Test that MetaData raises an error for invalid data."""
+    """Test that Metadata raises an error for invalid data."""
 
-    for kw in ("keywords", "title", "description"):
+    for kw in ["id"]:
         dup = base_data.copy()
         dup.pop(kw)
-        result = MetaData(**dup)
+        result = Metadata(**dup)
         assert result is not None, f"It should be allowed that {kw} is missing"
 
 
-def test_metadata(base_data: Dict[str, Any]):
+def test_metadata(base_data: Dict[str, Any], metadata: Metadata):
 
-    metadata = MetaData(**base_data)
     assert metadata.id == base_data["id"]
     assert metadata.filename == base_data["filename"]
-    for kw in sorted(set(base_data["keywords"])):
-        assert kw.lower() in metadata.keywords
 
-    kws = [kw.lower() for kw in sorted(set(base_data["keywords"]))]
+    kws = [kw.lower() for kw in set(base_data["keywords"])]
     for kw in kws:
         assert kw in metadata.keywords
 
@@ -67,87 +66,62 @@ def test_metadata(base_data: Dict[str, Any]):
     for kw in kws:
         assert "#" + kw.replace(" ", "") in metadata.instagram
 
-    metadata.keywords = SortedSet()
+    metadata.keywords = set()
     assert metadata.pexels == ""
     assert metadata.instagram == ""
 
 
-def test_append_keywords(sample: MetaData):
-    """Test the append_keywords method of MetaData."""
-    kws = {kw for kw in sample.keywords}
-    sample.append_keywords(kws)
-    assert Counter(sample.keywords) == Counter(kws), "Adding an existing keyword should avoid duplicates"
+def test_append_keywords(metadata: Metadata):
+    """Test the append_keywords method of Metadata."""
+    kws = {kw for kw in metadata.keywords}
+    metadata.append_keywords(kws)
+    assert Counter(metadata.keywords) == Counter(kws), "Adding an existing keyword should avoid duplicates"
     kws.add("extra")
-    sample.append_keywords(["extra"])
-    assert Counter(sample.keywords) == Counter(kws), "append_keywords should add new keywords"
+    metadata.append_keywords(["extra"])
+    assert Counter(metadata.keywords) == Counter(kws), "append_keywords should add new keywords"
 
-    sample.append_keywords([])
-    assert Counter(sample.keywords) == Counter(kws), "adding an empty list should do nothing"
+    metadata.append_keywords([])
+    assert Counter(metadata.keywords) == Counter(kws), "adding an empty list should do nothing"
 
 
-def test_remove_keywords(sample: MetaData):
-    """Test the remove_keywords method of MetaData."""
-    kws = {kw for kw in sample.keywords}
+def test_remove_keywords(metadata: Metadata):
+    """Test the remove_keywords method of Metadata."""
+    kws = {kw for kw in metadata.keywords}
 
-    sample.remove_keywords([])
-    assert Counter(kws) == Counter(sample.keywords)
+    metadata.remove_keywords([])
+    assert Counter(kws) == Counter(metadata.keywords)
 
     first = next(iter(kws))
-    sample.remove_keywords([first])
-    assert first not in sample.keywords, "remove_keywords should remove specified keywords"
+    metadata.remove_keywords([first])
+    assert first not in metadata.keywords, "remove_keywords should remove specified keywords"
 
     kws.remove(first)
-    assert Counter(kws) == Counter(sample.keywords)
+    assert Counter(kws) == Counter(metadata.keywords)
 
-    sample.remove_keywords(["non existing"])
-    assert Counter(kws) == Counter(sample.keywords)
+    metadata.remove_keywords(["non existing"])
+    assert Counter(kws) == Counter(metadata.keywords)
 
-    sample.remove_keywords(kws)
-    assert len(sample.keywords) == 0
+    metadata.remove_keywords(kws)
+    assert len(metadata.keywords) == 0
 
 
-def test_replace_keywords(sample: MetaData):
-    """Test the replace_keywords method of MetaData."""
+def test_replace_keywords(metadata: Metadata):
+    """Test the replace_keywords method of Metadata."""
     new_keywords = ["new", "keywords"]
-    sample.replace_keywords(new_keywords)
-    assert Counter(new_keywords) == Counter(
-        sample.keywords
-    ), "replace_keywords should replace all existing keywords with new ones"
+    metadata.replace_keywords(new_keywords)
+    assert Counter(new_keywords) == Counter(metadata.keywords), (
+        "replace_keywords should replace all existing keywords with new ones"
+    )
     new_keywords = ["Caps", "dup", "dup"]
-    sample.replace_keywords(new_keywords)
-    assert Counter(["caps", "dup"]) == Counter(
-        sample.keywords
-    ), "replace_keywords should remove duplicates and capitalization"
+    metadata.replace_keywords(new_keywords)
+    assert Counter(["caps", "dup"]) == Counter(metadata.keywords), (
+        "replace_keywords should remove duplicates and capitalization"
+    )
 
 
 def test_to_dict(base_data: Dict[str, Any]):
-    mddict = MetaData(**base_data).to_dict()
-    for key in ["id", "filename", "description", "title"]:
-        assert mddict[key] == base_data[key]
+    mddict = Metadata(**base_data).model_dump(mode="json")
+    for key in mddict.keys():
+        if not key == "keywords":
+            assert mddict[key] == base_data[key]
     assert Counter(mddict["keywords"]) == Counter({k.lower() for k in base_data["keywords"]})
-
-
-def test_to_db_metadata(sample: MetaData):
-    """Test if the conversion to DbMetadata is done correctly"""
-    id, dbmeta = sample.to_db_metadata()
-    assert dbmeta.filename == sample.filename
-    assert dbmeta.title == sample.title
-    assert dbmeta.description == sample.description
-    assert Counter(dbmeta.keywords) == Counter(sample.keywords)
-    assert id == sample.id
-
-
-def test_from_db_metdata(sample: MetaData):
-    id, dbmeta = sample.to_db_metadata()
-    result = MetaData.from_db_metadata(id, dbmeta)
-    assert sample == result
-
-def test_from_db_metadata_dict(sample: MetaData):
-    copy=MetaData(**sample.to_dict())
-    copy.id=sample.id+1
-    copy.filename="anotherfile.jpg"
-    mddict={sample.id:sample.to_db_metadata()[1], copy.id:copy.to_db_metadata()[1]}
-    result=MetaData.from_db_metadata_dict(mddict)
-    assert copy in result
-    assert sample in result
-    assert len(result)==2

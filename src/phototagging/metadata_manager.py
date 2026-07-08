@@ -1,8 +1,10 @@
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, List, Optional
+from typing import Any, Iterable, List, Optional, Set
 
-from .db import Db, DbMetadata
-from .metadata import MetaData
+from phototagging.db import Db
+
+from .metadata import Metadata
 from .phototag import PhotoTag
 
 
@@ -15,32 +17,26 @@ class MetadataManager:
         self.db = db
         self.phototag = phototag
 
-    def all(self) -> List[MetaData]:
+    def all(self) -> List[Metadata]:
         """Get all records from the database."""
         with self.db as c:
             data = c.all()
-        mdd = MetaData.from_db_metadata_dict(data)
-        # for md in mdd:
-        #     if md.create_full_path():
-        #         print(f"Updating full path of {md.filename}")
-        #         self._update_db(md)
+        return data
 
-        return mdd
-
-    def search(self, field: str, value: Any) -> List[MetaData]:
+    def search(self, field: str, value: Any) -> List[Metadata]:
         """Search for data in the database."""
         with self.db as c:
             data = c.search(field, value)
 
-        return MetaData.from_db_metadata_dict(data)
+        return data
 
     def get_or_create(
         self,
-        filename: str,
-        force: bool = False,
-        default_keywords: Optional[list[str]] = None,
+        full_path: str | Path,
+        required_keywords: Optional[list[str]] = None,
         keywords_to_remove: Optional[list[str]] = None,
-    ) -> Optional[MetaData]:
+        force: bool = False,
+    ) -> Metadata:
         """Get metadata for a file, or create it if not found.
 
         It ensures that all keywords from default_keywords are included, and removes keywords from
@@ -53,6 +49,11 @@ class MetadataManager:
             keywords_to_remove: A list of keywords to remove from the metadata.
         """
 
+        if isinstance(full_path, str):
+            full_path = Path(full_path)
+        full_path = full_path.resolve()
+        filename = full_path.name
+
         if force:
             try:
                 self.delete_by_filename(filename)
@@ -63,61 +64,52 @@ class MetadataManager:
 
         if not metadata:  # Does not exist yet, so we create it
             metadata = self.create(
-                filename,
-                required_keywords=default_keywords,
+                full_path=full_path,
+                required_keywords=required_keywords,
                 keywords_to_remove=keywords_to_remove,
             )
         else:
             self.update_keywords(
                 metadata,
-                keywords_to_add=default_keywords,
+                keywords_to_add=required_keywords,
                 keywords_to_remove=keywords_to_remove,
             )
         return metadata
 
-    def get_by_id(self, id: int) -> MetaData:
+    def get_by_id(self, id: str) -> Metadata:
         """Get a single record from the database."""
         with self.db as c:
-            result = c.get(id)
-            if not result:
-                raise ValueError(f"No metadata for id {id}")
-            return MetaData.from_db_metadata(result[0], result[1])
+            return c.get(id)
 
-    def get_by_filename(self, filename: str) -> Optional[MetaData]:
+    def get_by_filename(self, filename: str) -> Optional[Metadata]:
         """Get a single record by filename."""
         with self.db as c:
-            data = c.get_by_filename(filename)
-        if data:
-            return MetaData.from_db_metadata(data[0], data[1])
-        else:
-            return None
+            return c.get_by_filename(filename)
 
     def delete_by_filename(self, filename: str) -> None:
         """Delete a single record by filename."""
         with self.db as c:
-            data = c.get_by_filename(filename)
-            if not data:
-                raise ValueError(f"No record found with filename '{filename}'.")
-            c.delete(data[0])
+            c.delete_by_filename(filename)
 
-    def delete_by_id(self, id: int) -> None:
+    def delete_by_id(self, id: str) -> None:
         """Delete a single record by id."""
         with self.db as c:
-            data = c.get(id)
-            if not data:
-                raise ValueError(f"No record found with id '{id}'.")
-            c.delete(data[0])
+            c.delete(id)
 
     def create(
         self,
-        filename: str,
+        full_path: str | Path,
         required_keywords: Optional[list[str]] = None,
         keywords_to_remove: Optional[list[str]] = None,
-    ) -> MetaData:
+    ) -> Metadata:
         """Create metadata for a file using PhotoTag."""
+        if isinstance(full_path, str):
+            full_path = Path(full_path)
+        full_path = full_path.resolve()
+        filename = full_path.name
         if self.get_by_filename(filename):
             raise ValueError(f"Metadata for file '{filename}' already exists in the database.")
-        data = self.phototag.fetch_for_file(filename)
+        data = self.phototag.fetch_for_file(full_path)
         if not data:
             raise ExternalServiceError("Phototag api did not return any value")
         kws = data.get("keywords", [])
@@ -128,22 +120,22 @@ class MetadataManager:
             for kw in keywords_to_remove:
                 while kw in kws:
                     kws.remove(kw)
-        metadata = self._create_db_record(
-            filename=Path(filename).name,
-            full_path=str(Path(filename).resolve()),
+        metadata = self._create_metadata(
+            full_path=full_path,
             title=data.get("title", "") or "",
-            keywords=kws,
+            keywords=set(kws),
             description=data.get("description", "") or "",
         )
+        self._insert_db(metadata)
         return metadata
 
     def update_keywords(
         self,
-        metadata: MetaData,
+        metadata: Metadata,
         keywords: Optional[Iterable[str]] = None,
         keywords_to_add: Optional[Iterable[str]] = None,
         keywords_to_remove: Optional[Iterable[str]] = None,
-    ) -> MetaData:
+    ) -> Metadata:
         """Update keywords in metadata."""
         if keywords and (keywords_to_add or keywords_to_remove):
             raise ValueError("Setting keywords and also keywords_to_add or keywords_to_remove is not allowed")
@@ -153,7 +145,8 @@ class MetadataManager:
             metadata.append_keywords(keywords_to_add)
         if keywords_to_remove:
             metadata.remove_keywords(keywords_to_remove)
-        return self._update_db(metadata)
+        self._update_db(metadata)
+        return metadata
 
     def update_keywords_for_file(
         self,
@@ -161,39 +154,44 @@ class MetadataManager:
         keywords: Optional[Iterable[str]] = None,
         keywords_to_add: Optional[Iterable[str]] = None,
         keywords_to_remove: Optional[Iterable[str]] = None,
-    ) -> MetaData:
+    ) -> Metadata:
         metadata = self.get_by_filename(filename)
         if not metadata:
             raise ValueError(f"No metadata found for file {filename}")
         return self.update_keywords(metadata, keywords, keywords_to_add, keywords_to_remove)
 
-    def _create_db_record(
+    def _create_metadata(
         self,
-        filename: str,
-        full_path: str,
+        full_path: Path,
         title: str,
         description: str,
-        keywords: List[str],
-    ) -> MetaData:
-        """Create a new record in the database, and return the resulting MetaData"""
-        data = DbMetadata(
-            filename=filename,
-            full_path=full_path,
+        keywords: Set[str],
+    ) -> Metadata:
+        """Create a new record in the database, and return the resulting Metadata."""
+        p = Path(full_path).resolve()
+        try:
+            create_date = datetime.fromtimestamp(p.stat().st_ctime)
+        except FileNotFoundError:
+            create_date = datetime.now()
+
+        data = Metadata(
+            filename=p.name,
+            full_path=p,
+            create_date=create_date,
             keywords=keywords,
             description=description,
             title=title,
         )
-        with self.db as c:
-            id = c.insert(data)
-            md = MetaData.from_db_metadata(id, data)
-            return md
+        return data
 
-    def _update_db(self, metadata: MetaData) -> MetaData:
+    def _insert_db(self, metadata: Metadata) -> None:
+        with self.db as c:
+            c.insert(metadata)
+
+    def _update_db(self, metadata: Metadata) -> None:
         """Update the database with updated metadata"""
         with self.db as c:
-            id, md = metadata.to_db_metadata()
-            c.update(id, md)
-        return metadata
+            c.update(metadata)
 
 
 class ExternalServiceError(Exception):

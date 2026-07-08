@@ -1,42 +1,24 @@
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple, TypeAlias, TypeVar
+from typing import Any, List, Optional, TypeVar
 
-from pydantic import BaseModel, Field, field_validator
 from tinydb import Query, TinyDB
+from tinydb.queries import QueryLike
 from tinydb.table import Document
 
-
-# class Document(Dict[str, Any]):
-#     """A simple wrapper around TinyDB's document format that includes the document ID."""
-#     doc_id: int
-class DbMetadata(BaseModel):
-    filename: str = Field(..., min_length=1)
-    full_path: str = Field(default="")
-    keywords: List[str] = Field(default_factory=list)
-    description: str = ""
-    title: str = ""
-
+from .metadata import Metadata
 
 T = TypeVar("T")
 
 
-class DbMetadataPatch(BaseModel):
-    filename: Optional[str] = None
-    keywords: Optional[List[str]] = None
-    description: Optional[str] = None
-    title: Optional[str] = None
-
-    @field_validator("*")
-    def no_empty_values(cls, v: T) -> Optional[T]:
-        if v == "" or v == []:
-            return None
-        return v
-
-    # Add other fields as needed
-
-
-DbMetadataMap: TypeAlias = Dict[int, DbMetadata]
+def _search(field: str, value: Any) -> QueryLike:
+    """Return a TinyDB Query object for searching by field and value."""
+    if field == "keywords":
+        return Query().keywords.any(value)
+    elif isinstance(value, list):
+        return Query()[field].one_of(value)  # type: ignore
+    else:
+        return Query()[field] == value
 
 
 class Db:
@@ -58,91 +40,78 @@ class Db:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        self.close()
+        self.disconnect()
 
     def connect(self) -> None:
         """Connect to the database."""
         self._db = TinyDB(self.db_path)
 
-    def close(self):
+    def disconnect(self):
         """Close the database connection."""
         if self._db is not None:
             self._db.close()
             self._db = None
 
-    def insert(self, data: DbMetadata) -> int:
+    def insert(self, data: Metadata) -> str:
         """Insert data into the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        if self._filename_exists_in_db(data.filename):
+        if self._db.contains(_search("filename", data.filename)):
             raise ValueError(f"Data with filename '{data.filename}' already exists in the database.")
-        id = self._db.insert(data.model_dump())  # pyright: ignore[reportUnknownMemberType]
-        return id
+        if self._db.contains(_search("id", data.id)):
+            raise ValueError(f"Data with id '{data.id}' already exists in the database.")
+        self._db.insert(data.model_dump(mode="json"))  # type: ignore
+        return data.id
 
-    def get(self, id: int) -> Tuple[int, DbMetadata]:
+    def get(self, id: str) -> Metadata:
         """Get a single record from the database by id."""
 
         if self._db is None:
             raise RuntimeError("Database not connected.")
 
-        doc = self._db.get(doc_id=id)  # pyright: ignore[reportUnknownMemberType]
-        if doc is None:
+        docs = self._db.search(_search("id", id))
+        if not docs:
             raise ValueError(f"No document found with id '{id}'.")
-        assert isinstance(doc, Document)
-        data = DbMetadata(**doc)  # type: ignore
-        return (id, data)
 
-    def update(self, id: int, data: DbMetadata) -> int:
+        assert len(docs) == 1, f"Multiple documents found with id '{id}', expected only one."
+        data = Metadata(**docs[0])  # type: ignore
+        return data
+
+    def update(self, data: Metadata) -> str:
         """Update data in the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        assert self.get(id) is not None
-        ids = self._db.update(data.model_dump(), doc_ids=[id])  # pyright: ignore[reportUnknownMemberType]
+        assert self.get(data.id) is not None
+        ids = self._db.update(data.model_dump(mode="json"), _search("id", data.id))  # type: ignore
         if not ids:
             raise RuntimeError(f"Failed to update document with id '{id}'.")
         if len(ids) > 1:
             raise RuntimeError(f"Multiple documents updated with id '{id}', expected only one.")
-        return ids[0]
+        return data.id
 
-    def patch(self, id: int, data: DbMetadataPatch) -> int:
-        """Update data in the database."""
-        if self._db is None:
-            raise RuntimeError("Database not connected.")
-        id, ret = self.get(id)
-
-        combined = {**ret.model_dump(), **{k: v for k, v in data.model_dump().items() if v is not None}}
-        md = DbMetadata(**combined)
-
-        ids = self._db.update(md.model_dump(), doc_ids=[id])  # pyright: ignore[reportUnknownMemberType]
-        if not ids:
-            raise RuntimeError(f"Failed to patch document with id '{id}'.")
-        if len(ids) > 1:
-            raise RuntimeError(f"Multiple documents patched with id '{id}', expected only one.")
-        return ids[0]
-
-    def delete(self, id: int) -> int:
+    def delete(self, id: str) -> str:
         """Delete data from the database by id."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        assert self.get(id) is not None
-        ids = self._db.remove(doc_ids=[id])
-        if not ids:
-            raise RuntimeError(f"Failed to delete document with id '{id}'.")
-        if len(ids) > 1:
-            raise RuntimeError(f"Multiple documents deleted with id '{id}', expected only one.")
-        return ids[0]
 
-    def search(self, field: str, value: Any) -> DbMetadataMap:
+        docs = self._db.search(_search("id", id))
+        if not len(docs) == 1:
+            raise ValueError(f"Not exactly one document found with id {id}")
+        ret = self._db.remove(doc_ids=[doc.doc_id for doc in docs])  # type: ignore
+        if not ret:
+            raise RuntimeError(f"Failed to delete document with id '{id}'.")
+        if len(ret) > 1:
+            raise RuntimeError(f"Multiple documents deleted with id '{id}', expected only one.")
+        return id
+
+    def search(self, field: str, value: Any) -> List[Metadata]:
         """Search for data in the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        if field == "keywords":
-            ret = self._db.search(Query()[field].any(value))
-        else:
-            ret = self._db.search(Query()[field] == value)
-        return self._to_metadata_dict(ret)
+        ret = self._db.search(_search(field, value))
+        return self._to_metadata(ret)
 
-    def get_by_filename(self, filename: str) -> Optional[Tuple[int, DbMetadata]]:
+    def get_by_filename(self, filename: str) -> Optional[Metadata]:
         """Get a single record from the database by filename.
         If multiple records are found with the same filename, a ValueError is raised.
         If no records are found, None is returned."""
@@ -151,25 +120,36 @@ class Db:
         assert len(results) <= 1, f"Multiple records found with filename '{filename}'"
         if len(results) == 0:
             return None
-        id = next(iter(results))
-        data = results[id]
-        return (id, data)
+        data = next(iter(results))
+        return data
 
-    def delete_by_filename(self, filename: str) -> int | None:
+    def get_by_full_path(self, full_path: str) -> Optional[Metadata]:
+        """Get a single record from the database by full path.
+        If multiple records are found with the same full path, a ValueError is raised.
+        If no records are found, None is returned."""
+        path = Path(full_path).resolve()
+        results = self.search("full_path", str(path))
+        assert len(results) <= 1, f"Multiple records found with full_path '{full_path}'"
+        if len(results) == 0:
+            return None
+        data = next(iter(results))
+        return data
+
+    def delete_by_filename(self, filename: str) -> str:
         """Delete a single record by filename."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
         ret = self.get_by_filename(filename)
         if ret:
-            return self.delete(ret[0])
+            return self.delete(ret.id)
         else:
-            return None
+            raise ValueError(f"Cannot find record with filename={filename}")
 
-    def all(self) -> DbMetadataMap:
+    def all(self) -> List[Metadata]:
         """Get all records from the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        return self._to_metadata_dict(self._db.all())
+        return self._to_metadata(self._db.all())
 
     def len(self) -> int:
         """Get the number of records in the database."""
@@ -177,10 +157,10 @@ class Db:
             raise RuntimeError("Database not connected.")
         return len(self._db)
 
-    def _to_metadata_dict(self, list_of_documents: List[Document] | Document) -> DbMetadataMap:
+    def _to_metadata(self, list_of_documents: List[Document] | Document) -> List[Metadata]:
         if isinstance(list_of_documents, Document):
             list_of_documents = [list_of_documents]
-        return {doc.doc_id: DbMetadata(**doc) for doc in list_of_documents}  # type: ignore
+        return [Metadata(**doc) for doc in list_of_documents]  # type: ignore
 
     def _filename_exists_in_db(self, filename: str) -> bool:
         """Check if a filename already exists in the database."""
@@ -188,11 +168,75 @@ class Db:
             raise RuntimeError("Database not connected.")
         return self._db.contains(Query().filename == filename)
 
+    def _get_doc_id_by_id(self, id: str | List[str]) -> List[int] | int | None:
+        """Get the document ID for a given record ID."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+
+        if isinstance(id, list):
+            docs = self._db.search(Query()["id"].one_of(id))
+            if not docs:
+                return None
+            return [doc.doc_id for doc in docs]  # pyright: ignore[report
+
+        # id is a single string
+        docs = self._db.search(Query()["id"] == id)
+        if not docs:
+            return None
+        if len(docs) > 1:
+            raise RuntimeError(f"Multiple documents found with id '{id}', expected only one.")
+        return docs[0].doc_id
+
+    # The methods below operate on doc_id, not on id. They are used internally to support operations that require direct access to the underlying TinyDB document IDs.
+    def _db_update(self, doc_id: int, data: Metadata) -> int:
+        """Update a record or records by their document ID."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+
+        ids = self._db.update(data.model_dump(mode="json"), doc_ids=[doc_id])  # pyright: ignore[reportUnknownMemberType]
+        if not ids:
+            raise RuntimeError(f"Failed to update document with doc_id '{doc_id}'.")
+        if len(ids) > 1:
+            raise RuntimeError(f"Multiple documents updated with doc_id '{doc_id}', expected only one.")
+        return ids[0]
+
+    def _db_delete(self, doc_id: int | List[int]) -> int | List[int]:
+        """Delete a record or records by their document ID."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+
+        if isinstance(doc_id, int):
+            doc_id = [doc_id]
+        if not doc_id:
+            return []
+        ret = self._db.remove(doc_ids=doc_id)  # type: ignore
+        if len(ret) != len(doc_id) or set(ret) != set(doc_id):
+            raise RuntimeError(f"Failed to delete all documents with doc_ids '{doc_id}'.")
+        return ret
+
+    def _db_get(self, doc_id: int | List[int]) -> Metadata | List[Metadata]:
+        """Get a record or records by their document ID."""
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+
+        if isinstance(doc_id, list):
+            docs = self._db.search(Query().doc_id.one_of(doc_id))
+            if len(docs) != len(doc_id):
+                raise ValueError(f"Some document IDs not found: {doc_id}")
+            if set(doc.doc_id for doc in docs) != set(doc_id):
+                raise ValueError(f"Some document IDs not found: {doc_id}")
+            return [Metadata(**doc) for doc in docs]  # type: ignore
+
+        doc = self._db.get(doc_id=doc_id)  # type: ignore
+        if not doc:
+            raise ValueError(f"No document found with doc_id '{doc_id}'.")
+        return Metadata(**doc)  # type: ignore
+
 
 # def main() -> None:
 #     db = Db("test_db.json")
 #     with db as c:
-#         metadata = DbMetadata(
+#         metadata = Metadata(
 #             filename="test.jpg", keywords=["nature", "sunset"], description="A beautiful sunset.", title="Sunset"
 #         )
 #         id = c.insert(metadata)

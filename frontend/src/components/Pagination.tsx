@@ -1,37 +1,32 @@
 import { Button, Group, GroupProps } from "@chakra-ui/react";
-import { useImages } from "./ImageProvider";
+import { useMetadata } from "./MetadataProvider";
 
 const maxButtons = 9;
 
-function createButton(p: number, page: number, size: number, onPageChange: ({ page, size }: {
-  page: number;
-  size: number;
-}) => void) {
-  return (
-    <Button
-      key={p}
-      variant={p === page ? "solid" : "outline"}
-      onClick={() => onPageChange({ page: p, size })}
-    >
-      {p}
-    </Button>
-  )
+export default function Pagination(props: GroupProps) {
+  const { pagingData, setPagingData } = useMetadata();
 
-}
-export default function Pagination(props:GroupProps) {
-  const { pagingData, imageCount, setPagingData } = useImages();
-  const totalPages = Math.ceil(imageCount / pagingData.size);
-
+  function createButton(p: number) {
+    return (
+      <Button
+        key={p}
+        variant={p === pagingData.page ? "solid" : "outline"}
+        onClick={() => setPagingData({ ...pagingData, page: p })}
+      >
+        {p}
+      </Button>
+    )
+  }
 
   let start = 1;
-  let end = totalPages;
-  if (totalPages > maxButtons) {
+  let end = pagingData.total;
+  if (pagingData.total > maxButtons) {
     if (pagingData.page < maxButtons / 2) {
       start = 1;
       end = start + maxButtons - 1;
-    } else if (pagingData.page > (totalPages - maxButtons / 2)) {
-      end = totalPages;
-      start = totalPages - maxButtons + 1;
+    } else if (pagingData.page > (pagingData.total - maxButtons / 2)) {
+      end = pagingData.total;
+      start = pagingData.total - maxButtons + 1;
     } else {
       start = Math.ceil(pagingData.page - maxButtons / 2);
       end = start + maxButtons - 1;
@@ -42,9 +37,9 @@ export default function Pagination(props:GroupProps) {
     <Group attached {...props} >
       <Button
         key="first"
-        aria-label="Previous"
+        aria-label="First"
         disabled={pagingData.page === 1}
-        onClick={() => setPagingData({ page: 1, size: pagingData.size })}
+        onClick={() => setPagingData({ ...pagingData, page: 1 })}
       >
         &lt;&lt;
       </Button>
@@ -52,24 +47,24 @@ export default function Pagination(props:GroupProps) {
         key="previous"
         aria-label="Previous"
         disabled={pagingData.page === 1}
-        onClick={() => setPagingData({ page: pagingData.page - 1, size: pagingData.size })}
+        onClick={() => setPagingData({ ...pagingData, page: pagingData.page - 1 })}
       >
         &lt;
       </Button>
-      {pages.map((p) => createButton(p, pagingData.page, pagingData.size, setPagingData))}
+      {pages.map((p) => createButton(p))}
       <Button
         key="next"
         aria-label="Next"
-        disabled={pagingData.page === totalPages}
-        onClick={() => setPagingData({ page: pagingData.page + 1, size: pagingData.size })}
+        disabled={pagingData.page === pagingData.total}
+        onClick={() => setPagingData({ ...pagingData, page: pagingData.page + 1 })}
       >
         &gt;
       </Button>
       <Button
         key="last"
-        aria-label="Next"
-        disabled={pagingData.page === totalPages}
-        onClick={() => setPagingData({ page: totalPages, size: pagingData.size })}
+        aria-label="Last"
+        disabled={pagingData.page === pagingData.total}
+        onClick={() => setPagingData({ ...pagingData, page: pagingData.total })}
       >
         &gt;&gt;
       </Button>

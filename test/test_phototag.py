@@ -1,10 +1,11 @@
+from pathlib import Path
 from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
-from unittest.mock import Mock, patch
-from pathlib import Path
 import requests
-from phototagging.phototag import PhotoTag, URL, TOKEN, PAYLOAD
+
+from phototagging.phototag import PAYLOAD, TOKEN, URL, PhotoTag
 
 
 @pytest.fixture
@@ -88,7 +89,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response
@@ -116,7 +116,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = False
             mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
@@ -134,7 +133,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response
@@ -155,7 +153,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response
@@ -176,7 +173,6 @@ class TestPhotoTagFetchForFile:
             patch("builtins.open", create=True),
             patch("phototagging.phototag.requests.post") as mock_post,
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response
@@ -198,7 +194,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response
@@ -218,7 +213,6 @@ class TestPhotoTagFetchForFile:
             patch("phototagging.phototag.requests.post") as mock_post,
             patch("builtins.open", create=True),
         ):
-
             mock_response = Mock()
             mock_response.ok = True
             mock_response.json.return_value = sample_response

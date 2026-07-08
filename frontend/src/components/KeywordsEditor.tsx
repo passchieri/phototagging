@@ -1,8 +1,8 @@
 import { Button, Checkbox, Field, Flex, Group, Text, Input, Stack } from "@chakra-ui/react";
-import { ImageMetadata } from "./interfaces";
 import { useState } from "react";
+import { Metadata } from "../api";
 
-export default function KeywordsEditor({ metadata, setUpdatedKeywords }: { metadata: ImageMetadata | null; setUpdatedKeywords: React.Dispatch<React.SetStateAction<string[]>> }) {
+export default function KeywordsEditor({ metadata, setUpdatedKeywords }: { metadata: Metadata | null; setUpdatedKeywords: React.Dispatch<React.SetStateAction<string[]>> }) {
 
     const [allKeywords, updateAllKeywords] = useState<string[]>(metadata?.keywords || [])
     allKeywords.sort()

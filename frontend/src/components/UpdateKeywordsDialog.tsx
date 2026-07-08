@@ -1,12 +1,12 @@
 import { Button, CloseButton, Dialog, DialogRootProps, Portal, Image } from "@chakra-ui/react";
 import KeywordsEditor from "./KeywordsEditor";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
-import { ImageMetadata } from "./interfaces";
+import { Metadata } from "../api";
 
 interface UpdateKeywordsProps extends DialogRootProps {
-    metadata: ImageMetadata;
+    metadata: Metadata;
     url: string;
-    setMetadata: Dispatch<SetStateAction<ImageMetadata>>
+    setMetadata: Dispatch<SetStateAction<Metadata>>
 }
 export function UpdateKeywordsDialog({ metadata, url, setMetadata, ...props }: UpdateKeywordsProps) {
     const updateRef = useRef<HTMLButtonElement>(null);

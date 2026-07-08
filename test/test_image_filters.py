@@ -1,4 +1,4 @@
-#type: ignore
+# type: ignore
 # tests/test_image_filters.py
 
 from __future__ import annotations
@@ -11,15 +11,15 @@ import pytest
 
 from phototagging.filters import (
     create_age_filter,
+    create_db_filter,
     create_max_files_filter,
     create_regexp_filter,
-    create_db_filter,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def tmp_images(tmp_path):
@@ -45,10 +45,11 @@ def patch_mtimes(images: list[Path], mtimes: list[datetime]):
 # Age filter tests (parametrized)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "max_days, ages, expected_indices",
     [
-        (5, [1, 10, 2], [0, 2]),   # keep images 0 and 2
+        (5, [1, 10, 2], [0, 2]),  # keep images 0 and 2
         (1, [0.5, 2, 0.2], [0, 2]),
         (0, [0, 1, 2], [0]),
     ],
@@ -56,7 +57,7 @@ def patch_mtimes(images: list[Path], mtimes: list[datetime]):
 def test_age_filter(tmp_images, max_days, ages, expected_indices):
     now = datetime.now()
     # Add 5 minutes, otherwise all dates can be as good as on the cutoff time
-    mtimes = [now - timedelta(days=a)+timedelta(minutes=5) for a in ages]
+    mtimes = [now - timedelta(days=a) + timedelta(minutes=5) for a in ages]
 
     with patch_mtimes(tmp_images, mtimes):
         flt = create_age_filter(max_days)
@@ -69,6 +70,7 @@ def test_age_filter(tmp_images, max_days, ages, expected_indices):
 # ---------------------------------------------------------------------------
 # Max files filter tests (parametrized)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "max_files, expected_count",
@@ -89,6 +91,7 @@ def test_max_files_filter(tmp_images, max_files, expected_count):
 # ---------------------------------------------------------------------------
 # Regexp filter tests (parametrized)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "pattern, filenames, expected",
@@ -116,6 +119,7 @@ def test_regexp_filter(tmp_path, pattern, filenames, expected):
 # ---------------------------------------------------------------------------
 # DB filter tests
 # ---------------------------------------------------------------------------
+
 
 class DummyRecord:
     def __init__(self, filename: str):

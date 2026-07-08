@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ryanluker.vscode-coverage-gutters",
+        "tamasfe.even-better-toml",
+        "mhutchie.git-graph",
+        "ms-python.mypy-type-checker",
+        "ms-python.python",
+    ]
+}
