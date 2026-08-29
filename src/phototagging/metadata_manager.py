@@ -23,6 +23,12 @@ class MetadataManager:
             data = c.all()
         return data
 
+    def all_dirs(self) -> List[Path]:
+        """Get all folders included in the database"""
+        with self.db as c:
+            data = c.all_dirs()
+        return data
+
     def search(self, field: str, value: Any) -> List[Metadata]:
         """Search for data in the database."""
         with self.db as c:
@@ -192,6 +198,9 @@ class MetadataManager:
         """Update the database with updated metadata"""
         with self.db as c:
             c.update(metadata)
+
+    def __repr__(self):
+        return f"MetadataManager(db={self.db}, phototag={self.phototag})"
 
 
 class ExternalServiceError(Exception):

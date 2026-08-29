@@ -1,3 +1,4 @@
+import logging
 import os
 from enum import Enum
 from pathlib import Path
@@ -11,15 +12,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
+from folder_manager.folder_manager import FolderManager
 from phototagging.db import Db as PhototagDb
 from phototagging.metadata import Metadata
 from phototagging.metadata_manager import MetadataManager
 from phototagging.phototag import PhotoTag
 from phototagging.scanner import Scanner
 
+ROOT_DIR = Path("/Users/igor/Pictures/Lightroom Saved Photos")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    log = logging.getLogger("uvicorn.photo_tagging")
     load_dotenv(dotenv_path=Path.home() / ".phototag.env")
     phototag_url = os.getenv("PHOTOTAG_URL", "https://server.phototag.ai/api/keywords")
     phototag_token = os.getenv("PHOTOTAG_TOKEN", "")
@@ -32,8 +37,11 @@ async def lifespan(app: FastAPI):
     )
     metadata_manager = MetadataManager(db, phototag)
     scanner = Scanner(metadata_manager, ROOT_DIR)
+    folder_manager = FolderManager(str(ROOT_DIR))
     state["metadata_manager"] = metadata_manager
     state["scanner"] = scanner
+    state["folder_manager"] = folder_manager
+    log.info(f"Server lifespan started: {metadata_manager=},{folder_manager=}")
 
     yield  # Server runs and handles requests here
 
@@ -46,7 +54,6 @@ app = FastAPI(lifespan=lifespan)
 state: dict[str, Any] = {}
 
 origins = ["http://localhost:5173", "localhost:5173"]
-ROOT_DIR = Path("/Users/igor/Pictures/Lightroom Saved Photos")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -70,6 +77,13 @@ def get_scanner() -> Scanner:
     return scanner
 
 
+def get_folder_manager() -> FolderManager:
+    folder_manager = cast(FolderManager, state.get("folder_manager"))
+    if not folder_manager:
+        raise HTTPException(status_code=500, detail="Folder manager not initialized")
+    return folder_manager
+
+
 class KeywordsUpdateRequest(BaseModel):
     keywords: List[str]
 
@@ -83,6 +97,12 @@ class ImagesResponse(BaseModel):
     data: List[str]
 
 
+class FolderEntry(BaseModel):
+    name: str
+    path: str
+    is_dir: bool
+
+
 @app.get("/scan", tags=["images"], response_model=List[str], operation_id="scan")
 async def available_images(
     scanner: Scanner = Depends(get_scanner),
@@ -92,6 +112,38 @@ async def available_images(
     images = scanner.scan(True)
 
     return [img.name for img in images]
+
+
+@app.get("/files", tags=["files"], response_model=List[FolderEntry], operation_id="list_files")
+@app.get("/files/{subpath:path}", tags=["files"], response_model=List[FolderEntry], operation_id="list_files_subpath")
+async def list_files(
+    subpath: Optional[str] = None,
+    folder_manager: FolderManager = Depends(get_folder_manager),
+) -> List[FolderEntry]:
+    """Return files and folders from the root folder or a given subpath."""
+
+    target_path = Path(subpath) if subpath else Path(".")
+    base_dir = folder_manager.root.resolve()
+    requested_dir = (base_dir / target_path).resolve()
+
+    try:
+        requested_dir.relative_to(base_dir)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Path is outside the root folder") from exc
+
+    try:
+        entries = folder_manager.children(target_path)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return [
+        FolderEntry(
+            name=entry.name,
+            path=str(entry.relative_to(base_dir)).replace("\\", "/"),
+            is_dir=entry.is_dir(),
+        )
+        for entry in entries
+    ]
 
 
 @app.get("/images", tags=["images"], response_model=List[str], operation_id="get_images")

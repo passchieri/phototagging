@@ -61,3 +61,6 @@ class PhotoTag:
             if "keywords" not in normalized_data:
                 normalized_data["keywords"] = []  # pragma: no cover
             return cast(PhotoTagResponse, normalized_data)
+
+    def __repr__(self):
+        return f"Phototag(url={self.url})"

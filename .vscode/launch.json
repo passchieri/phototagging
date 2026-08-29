@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Uvicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "server.api:app",
+                "--reload",
+                "--port", "8000"
+            ],
+        },
+        {
             "name": "Python Debugger: Flask",
             "type": "debugpy",
             "request": "launch",
@@ -27,7 +38,7 @@
             "name": "Python Debugger: Cli with Arguments",
             "type": "debugpy",
             "request": "launch",
-            "module": "phototag.cli",
+            "module": "phototagging.cli",
             "console": "integratedTerminal",
             "args": "${command:pickArgs}"
         }

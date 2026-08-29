@@ -1,26 +1,29 @@
-import { useState } from "react"
-import { Card, Image, Button, DataList, } from "@chakra-ui/react";
+import { useEffect } from "react"
+import { Card, Image, DataList, } from "@chakra-ui/react";
 import { useMetadata } from "./MetadataProvider";
 import { UpdateKeywordsDialog } from "./UpdateKeywordsDialog";
 import { Metadata } from "../api";
 
 
-export default function MetadataCard({ metadata_in }: { metadata_in: Metadata }) {
-    const { url } = useMetadata();
-    const image_url = `${url}/image/${metadata_in.filename}`
-    const [metadata, setMetadata] = useState<Metadata>(metadata_in)
+export default function MetadataCard({ id }: { id: string }) {
+    const { url, client, updateMetadataSet, metadataSet } = useMetadata();
 
-    const fetchMetadata = async (refresh: boolean = false) => {
+    const metadata=metadataSet[id];
+    if (!metadata) return (<></>);
 
-        // setMetadata({ id: image_name, filename: image_name, description: "", keywords: [], title: "Refreshing..." } as Metadata)
-        const response = await fetch(`${url}metadata/${metadata.id}?refresh=${refresh}`)
-        const fetched_metadata = await response.json()
-        setMetadata(fetched_metadata.data)
+    const image_url = `${url}/image/${metadata.filename}`
+
+
+    useEffect(() => { 
+
+    }, [metadataSet])
+
+    function update(metadata: Metadata) {
+        updateMetadataSet(metadata)
     }
 
-
     return (
-        <Card.Root maxW="l" h="100%">
+        <Card.Root maxW="s" h="100%">
             <Image
                 src={image_url}
                 alt="Image"
@@ -47,7 +50,7 @@ export default function MetadataCard({ metadata_in }: { metadata_in: Metadata })
                 >
                     <DataList.Item marginBlockEnd={2}>
                         <DataList.ItemLabel><b>Keywords:</b></DataList.ItemLabel>
-                        <DataList.ItemValue>{metadata.keywords?.join(", ") || "No keywords"}</DataList.ItemValue>
+                        <DataList.ItemValue>{metadata.keywords?.sort((a,b)=>a.localeCompare(b)).join(", ") || "No keywords"}</DataList.ItemValue>
                     </DataList.Item>
                     <DataList.Item >
                         <DataList.ItemLabel><b>Filename:</b></DataList.ItemLabel>
@@ -64,8 +67,8 @@ export default function MetadataCard({ metadata_in }: { metadata_in: Metadata })
                 </DataList.Root>
             </Card.Body>
             <Card.Footer>
-                <Button variant="outline" onClick={() => fetchMetadata(true)}>Refresh</Button>
-                <UpdateKeywordsDialog metadata={metadata} url={url} children={undefined} setMetadata={setMetadata} />
+                {/* <Button variant="outline" onClick={() => fetchMetadata(true)}>Refresh</Button> */}
+                <UpdateKeywordsDialog metadata={metadata} image_url={image_url} children={undefined} setMetadata={update} client={client} />
             </Card.Footer>
         </Card.Root >
     )

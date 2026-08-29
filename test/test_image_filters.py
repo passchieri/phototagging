@@ -12,6 +12,7 @@ import pytest
 from phototagging.filters import (
     create_age_filter,
     create_db_filter,
+    create_folder_filter,
     create_max_files_filter,
     create_regexp_filter,
 )
@@ -114,6 +115,23 @@ def test_regexp_filter(tmp_path, pattern, filenames, expected):
 
     expected_paths = [tmp_path / name for name in expected]
     assert result == expected_paths
+
+
+def test_folder_filter(tmp_path):
+    target_dir = tmp_path / "photos"
+    other_dir = tmp_path / "other"
+    target_dir.mkdir()
+    other_dir.mkdir()
+
+    img_in_folder = target_dir / "a.jpg"
+    img_in_other_folder = other_dir / "b.jpg"
+    img_in_folder.write_text("x")
+    img_in_other_folder.write_text("x")
+
+    flt = create_folder_filter(str(target_dir))
+    result = flt([img_in_folder, img_in_other_folder])
+
+    assert result == [img_in_folder]
 
 
 # ---------------------------------------------------------------------------

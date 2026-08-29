@@ -1,6 +1,6 @@
 from pathlib import Path
 from types import TracebackType
-from typing import Any, List, Optional, TypeVar
+from typing import Any, List, Optional, Set, TypeVar
 
 from tinydb import Query, TinyDB
 from tinydb.queries import QueryLike
@@ -149,7 +149,18 @@ class Db:
         """Get all records from the database."""
         if self._db is None:
             raise RuntimeError("Database not connected.")
-        return self._to_metadata(self._db.all())
+        all = self._db.all()
+        return self._to_metadata(all)
+        # return self._to_metadata(self._db.all())
+
+    def all_dirs(self) -> List[Path]:
+        if self._db is None:
+            raise RuntimeError("Database not connected.")
+        all = self.all()
+        dirs: Set[Path] = set()
+        for entry in all:
+            dirs.add(entry.full_path.parent)
+        return list(dirs)
 
     def len(self) -> int:
         """Get the number of records in the database."""
@@ -231,6 +242,9 @@ class Db:
         if not doc:
             raise ValueError(f"No document found with doc_id '{doc_id}'.")
         return Metadata(**doc)  # type: ignore
+
+    def __repr__(self):
+        return f"Db(path={self.db_path})"
 
 
 # def main() -> None:

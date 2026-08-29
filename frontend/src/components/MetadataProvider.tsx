@@ -1,6 +1,12 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from "react";
-import { Metadata, PhotoTaggingClient } from "../api";
+import { Metadata, MetadataService, PhotoTaggingClient } from "../api";
 import { DateValue, parseDate } from "@chakra-ui/react";
+
+const sortMetadata = (metadataEntries: Record<string,Metadata>) => {
+    return [...Object.values(metadataEntries)].sort((a, b) => {
+        return new Date(b.create_date).getTime() - new Date(a.create_date).getTime();
+    });
+};
 
 const DEFAULT_URL = "http://localhost:8000";
 const DEFAULT_PAGING = { page: 1, size: 12, total: 1 }
@@ -11,17 +17,22 @@ export interface PagingData {
 }
 interface MetadataProviderValue {
     url: string;
+    client: MetadataService
     fileFilter: string;
     setFileFilter: (filter: string) => void;
     keywordFilter: string;
     setKeywordFilter: (filter: string) => void;
     dateFilter: { first: DateValue | undefined, last: DateValue | undefined };
     setDateFilter: ({ first, last }: { first: DateValue | undefined, last: DateValue | undefined }) => void;
-    metadataSet:Metadata[];
+    metadataSet: Record<string, Metadata>;
+    updateMetadataSet:(data:Metadata)=>void;
     filteredMetadataSet: Metadata[];
     pagingData: PagingData;
     setPagingData: (pagingData: PagingData) => void;
 }
+
+const client = new PhotoTaggingClient({ "BASE": DEFAULT_URL }).metadata
+
 const MetadataProviderContext = createContext<MetadataProviderValue>({
     fileFilter: "",
     setFileFilter: () => { },
@@ -29,39 +40,48 @@ const MetadataProviderContext = createContext<MetadataProviderValue>({
     setKeywordFilter: () => { },
     dateFilter: { first: undefined, last: undefined },
     setDateFilter: () => { },
-    metadataSet:[],
+    metadataSet: {},
     filteredMetadataSet: [],
     pagingData: DEFAULT_PAGING,
     setPagingData: () => { },
-    url: DEFAULT_URL
+    url: DEFAULT_URL,
+    client: client,
+    updateMetadataSet: () => { }
 });
+
 
 export function MetadataProvider({ children }: { children: ReactNode; }) {
     const [fileFilter, setFileFilter] = useState<string>("");
     const [keywordFilter, setKeywordFilter] = useState<string>("");
     const [dateFilter, setDateFilter] = useState<{ first: DateValue | undefined, last: DateValue | undefined }>({ first: undefined, last: undefined })
-    const [metadataSet, setMetadataSet] = useState<Metadata[]>([]);
+    const [metadataSet, setMetadataSet] = useState<Record<string, Metadata>>({});
     const [filteredMetadataSet, setFilteredMetadataSet] = useState<Metadata[]>([]);
     const [pagingData, setPagingData] = useState<PagingData>(DEFAULT_PAGING);
     const url = DEFAULT_URL;
 
 
-    const client = new PhotoTaggingClient({ "BASE": url })
 
     const fetchImages = async () => {
-        const metadata = await client.metadata.getMetadatas();
-        const sortedMetadata = [...metadata].sort((a, b) => {
-            return new Date(b.create_date).getTime() - new Date(a.create_date).getTime();
-        });
-        setMetadataSet(sortedMetadata);
+        const data = await client.getMetadatas();
+        const metadata=Object.fromEntries(data.map(m=>[m.id,m])) as Record<string,Metadata>
+
+        setMetadataSet(metadata);
     };
+
+    const updateMetadataSet = (metadata: Metadata) => {
+        if (!metadata.id) return;
+        metadataSet[metadata.id]=metadata;
+        setMetadataSet({...metadataSet, [metadata.id]:metadata})
+
+        };
+    
     useEffect(() => {
         fetchImages();
     }, []);
 
 
     useEffect(() => {
-        const data = metadataSet
+        const data = sortMetadata(metadataSet)
             .filter(md => {
                 if (fileFilter === "") return true;
                 return (md.filename.indexOf(fileFilter) >= 0);
@@ -116,6 +136,8 @@ export function MetadataProvider({ children }: { children: ReactNode; }) {
             filteredMetadataSet,
             pagingData,
             setPagingData,
+            client,
+            updateMetadataSet
         }}>
             {children}
         </MetadataProviderContext.Provider>

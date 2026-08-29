@@ -79,3 +79,17 @@ def create_db_filter(metadata_managaer: MetadataManager) -> ImageFilter:
         return [image_path for image_path in images if str(image_path) in existing or image_path.name in existing]
 
     return filter_by_db
+
+
+def create_folder_filter(folder: str | Path) -> ImageFilter:
+    if isinstance(folder, str):
+        folder = Path(folder)
+
+    folder = folder.absolute()
+    if not folder.is_dir():
+        raise ValueError(f"{folder} is not a directory")
+
+    def filter_by_folder(images: list[Path]) -> list[Path]:
+        return [image for image in images if image.parent.absolute() == folder]
+
+    return filter_by_folder

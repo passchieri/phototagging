@@ -1,4 +1,4 @@
-import { Box, BoxProps, Flex, FlexProps, HTMLChakraProps } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import { MetadataSelector } from "./MetadataSelector";
 import MetadataContainer from "./MetadataContainer";
 import Pagination from "./Pagination"
