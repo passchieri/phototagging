@@ -1394,7 +1394,7 @@ wheels = [
 
 [[package]]
 name = "phototagging"
-version = "0.1.0"
+version = "2.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
