@@ -14,7 +14,7 @@ print:
 PACKAGE_NAME        := $(shell project_info name)
 PROJECT_SCRIPTS     := $(shell project_info scripts)
 VERSION             := $(shell project_info version)
-BUMP_VERSION		:= $(shell project_info next_version)
+BUMP_VERSION		:= $(shell project_info BUMP_VERSION)
 NORMALIZED_VERSION  := $(shell echo $(VERSION) | sed -e 's/+/_/g')
 
 SRCS           =$(wildcard src/*.py) \
@@ -107,8 +107,8 @@ check-clean:
 
 bump: test check-clean
 	@echo "Current version: $(VERSION)"
-	@echo "Bumping to next version: $(NEXT_VERSION)"
-	git tag v$(NEXT_VERSION)
+	@echo "Bumping to next version: $(BUMP_VERSION)"
+	git tag v$(BUMP_VERSION)
 
 
 docs: $(DOCS)
