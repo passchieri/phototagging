@@ -1,7 +1,4 @@
-import json
 from typing import Generator
-
-from phototagging.db import Db, DbMetadata
 
 
 def read_results_blocks(filepath: str) -> Generator[list[str], None, None]:
@@ -21,15 +18,15 @@ def read_results_blocks(filepath: str) -> Generator[list[str], None, None]:
                 block = []
 
 
-with Db("results.json") as db:
-    for [file, kw, insta, title, desc] in read_results_blocks("results.txt"):
-        keywords = kw.split(", ")
-        dic: DbMetadata = DbMetadata(
-            filename=file,
-            keywords=keywords,
-            title=title,
-            description=desc,
-        )
-        json_str = json.dumps(dic, ensure_ascii=False)
-        db.insert(dic)
-        print(json_str)
+# with Db("results.json") as db:
+#     for [file, kw, insta, title, desc] in read_results_blocks("results.txt"):
+#         keywords = kw.split(", ")
+#         dic: Metadata = Metadata(
+#             filename=file,
+#             keywords=keywords,
+#             title=title,
+#             description=desc,
+#         )
+#         json_str = json.dumps(dic, ensure_ascii=False)
+#         db.insert(dic)
+#         print(json_str)

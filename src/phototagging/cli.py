@@ -5,6 +5,7 @@ from typing import Iterable, List, Optional
 
 from dotenv import load_dotenv
 
+from . import __version__ as phototag_version
 from .db import Db
 from .exif import ExifManager
 from .metadata import Metadata
@@ -31,6 +32,12 @@ def _create_parser():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
+        "--version",
+        action="store_true",
+        help="Show version information",
+    )
+
+    parser.add_argument(
         "-a",
         "--all",
         action="store_true",
@@ -45,7 +52,7 @@ def _create_parser():
     parser.add_argument(
         "-e",
         "--exif",
-        default="none",
+        default="read",
         help="Read or write metadata",
     )
     parser.add_argument(
@@ -152,6 +159,9 @@ def _print_result(result: Metadata | None, fields: list[str]) -> None:
 
 def validate_args(args: argparse.Namespace) -> None:
     """Validate the command-line arguments."""
+    if args.version:
+        print(f"PhotoTagging CLI version: {phototag_version}")
+        exit(0)
     if not args.token:
         raise ValueError("API token is required. Set it with --token or in $HOME/.phototag.env")
     if args.all and args.scan:
