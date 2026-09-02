@@ -14,6 +14,7 @@ print:
 PACKAGE_NAME        := $(shell project_info name)
 PROJECT_SCRIPTS     := $(shell project_info scripts)
 VERSION             := $(shell project_info version)
+BUMP_VERSION		:= $(shell project_info next_version)
 NORMALIZED_VERSION  := $(shell echo $(VERSION) | sed -e 's/+/_/g')
 
 SRCS           =$(wildcard src/*.py) \
@@ -95,6 +96,20 @@ publish_image: docker_image
 
 install: $(WHEEL)
 	uv tool install $(WHEEL)
+
+check-clean:
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "❌ You have uncommitted changes!"; \
+		exit 1; \
+	else \
+		echo "✅ Working directory is clean."; \
+	fi
+
+bump: test check-clean
+	@echo "Current version: $(VERSION)"
+	@echo "Bumping to next version: $(NEXT_VERSION)"
+	git tag v$(NEXT_VERSION)
+
 
 docs: $(DOCS)
 
