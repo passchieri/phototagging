@@ -178,6 +178,7 @@ class TestValidateArgs:
         args.scan = kwargs["scan"]
         args.delete = kwargs["delete"]
         args.image = kwargs["image"]
+        args.version=False
 
         with pytest.raises(ValueError, match=expected_message):
             validate_args(args)
@@ -268,6 +269,7 @@ class TestMain:
             mock_args.token = ""
             mock_args.image = []
             mock_args.tags = []
+            mock_args.version = False
             mock_parser.return_value.parse_args.return_value = mock_args
 
             result = main()
@@ -289,6 +291,7 @@ class TestMain:
             mock_args.image = []
             mock_args.print = []
             mock_args.scan = None
+            mock_args.version = False
             mock_parser.return_value.parse_args.return_value = mock_args
 
             result = main()
@@ -310,6 +313,7 @@ class TestMain:
             mock_args.print = []
             mock_args.all = True
             mock_args.scan = None
+            mock_args.version = False
 
             mock_parser.return_value.parse_args.return_value = mock_args
             mock_meta.return_value.all.return_value = [MagicMock(filename="filename") for _ in range(3)]
@@ -333,6 +337,7 @@ class TestMain:
             mock_args.print = []
             mock_args.scan = False
             mock_args.all = False
+            mock_args.version = False
 
             # Setup the Meta mock
             mock_meta_instance = MagicMock()
@@ -365,6 +370,7 @@ class TestMain:
             mock_args.print = []
             mock_args.scan = False
             mock_args.all = False
+            mock_args.version = False
 
             # Setup the Meta mock
             mock_meta_instance = MagicMock()
@@ -400,6 +406,7 @@ class TestMain:
             mock_args.print = []
             mock_args.scan = False
             mock_args.all = False
+            mock_args.version = False
 
             # Setup the Meta mock
             mock_meta_instance = MagicMock()
@@ -433,6 +440,7 @@ class TestMain:
             mock_args.tags = []
             mock_args.image = []
             mock_args.print = []
+            mock_args.version = False
             mock_parser.return_value.parse_args.return_value = mock_args
 
             mock_db.side_effect = Exception("Database error")
