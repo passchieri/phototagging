@@ -1,7 +1,7 @@
 [project]
 name = "phototagging"
-version = "2.5.0"
-description = "Add your description here"
+dynamic = ["version"]
+description = "Phototagging utility"
 readme = "README.md"
 authors = [{ name = "Igor Passchier", email = "igor.passchier@gmail.com" }]
 requires-python = ">=3.14,<4.0"
@@ -31,8 +31,8 @@ exif = "phototagging.exif:main"
 
 
 [build-system]
-requires = ["uv_build>=0.11.22,<0.12.0"]
-build-backend = "uv_build"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
@@ -54,6 +54,10 @@ test = [
     "tox>=4.56.1",
     "httpx2>=0.28.0",
 ]
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
 
 [tool.ruff]
 # Set the line length limit for both the formatter and linters.
